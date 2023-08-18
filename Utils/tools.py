@@ -21,14 +21,19 @@ class toolkit():
 		return interfacesJson
 
 	def get_cpu_temperature_linux():
-		try:
-			output = subprocess.check_output(['sensors']).decode('utf-8')
-			temperature_lines = [line for line in output.split('\n') if 'Core 0' in line]
-			temperature = temperature_lines[0].split(':')[1].strip()
-			return round(temperature)
-		except Exception as e:
-			print(f"Error fetching CPU temperature: {e}")
-			return None
+	    try:
+	        output = subprocess.check_output(['sensors']).decode('utf-8')
+	        temperature_lines = [line for line in output.split('\n') if 'Core 0' in line]
+	        
+	        if temperature_lines:
+	            temperature = temperature_lines[0].split(':')[1].strip()
+	            return round(float(temperature))  # Convert temperature to float before rounding
+	        else:
+	            print("Core temperature line not found in output.")
+	            return None
+	    except Exception as e:
+	        print(f"Error fetching CPU temperature: {e}")
+	        return None
 
 
 	def get_cpu_usage():
