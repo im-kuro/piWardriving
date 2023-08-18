@@ -80,7 +80,7 @@ async def startWardrive(request):
 
 @app.route('/data', methods=["GET"])
 async def getData(request):
-    return json({'temperature': tools.toolkit.get_cpu_temperature_linux(), 'cpuUsage': tools.toolkit.get_cpu_usage()})
+    return json({'temperature': tools.toolkit.get_cpu_temperature(), 'cpuUsage': tools.toolkit.get_cpu_usage()})
 
 @app.route('/networks', methods=['GET'])
 async def get_networks(request):
