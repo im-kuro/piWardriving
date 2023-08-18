@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wardriving Tool</title>
+    <!-- Add Bootstrap CSS link -->
+    <link rel="stylesheet" href="Utils/static/bootstrap-5.3.1-dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="modal" id="interfaceModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="interfaceForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Select Interface</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>Please select the interface you want to use:</p>
+                        <select class="form-select" id="interfaceSelect" aria-label="Default select example">
+                            {% for interface_name, interface_data in deviceInfo.interfaces.items() %}
+                                <option value="{{ interface_data.idx }}">{{ interface_data.interfaceName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <div class="container-fluid">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark">
+            <div class="container-fluid">
+                <img src="Utils/static/Kuro2ToneRedNOBG.png" style="height: 95px; width: 95px">
+                <a class="navbar-brand" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Wardriving Tool</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/" style="font-weight: 1000;">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/analytics">Analytics</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/output">Output</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="row">
+            <!-- Device Info Section -->
+            <div class="col-md-6 bg-primary text-white p-4">
+                <h1>Device info</h1>
+                <h4>Hostname: {{ deviceInfo["hostname"] }}</h4>
+                <h4>OS: {{ deviceInfo["os"] }}</h4>
+                <h4>IP: {{ deviceInfo["ip"] }}</h4>
+                <h4>MAC: {{ deviceInfo["mac"] }}</h4>
+                <h4>RAM: {{ deviceInfo["ram"] }}</h4>
+                <div class="">
+                    <h1>Interface info</h1>
+                    <h4 id="selectedInterface">Using Interface: </h4>
+                </div> 
+            </div>
+
+            <!-- Network Info Section -->
+            <div class="col-md-6 bg-secondary text-white p-4">
+
+                <h1>Network info</h1>
+                <h4 id="networkCount">Networks:</p>
+                <h4 id="wepNetworks">WEP:</h4>
+                <h4 id="wpaNetworks">WPA:</h4>
+                <h4 id="wpa2Networks">WPA2:</h4>
+                <h4 id="wpaN3etworks">WEP3:</h4>
+                <div class="">
+                    <button id="startWardriving" class="btn btn-primary btn-lg">Start Wardriving😈</button>
+                </div>
+ 
+            </div>
+
+        </div>
+
+        <div class="row">
+            <!-- Temperature Chart -->
+            <div class="col-sm-6">
+                <canvas id="temperatureChart"></canvas>
+                <h4 id="temp">CPU Temp: </h4>
+            </div>
+            <!-- CPU Usage Chart -->
+            <div class="col-sm-6">
+                <canvas id="cpuUsageChart"></canvas>
+                <h4 id="cpu">CPU Usage: </h4>
+            </div>
+        </div>
+    </div>
+    <!-- Add Bootstrap JS and Popper.js -->
+    <script src="Utils/static/bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Add Chart.js -->
+    <script  src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const MAX_DATA_POINTS = 20;
+    const temperatureChart = document.getElementById('temperatureChart').getContext('2d');
+    const cpuUsageChart = document.getElementById('cpuUsageChart').getContext('2d');
+
+    const temperatureChartInstance = new Chart(temperatureChart, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Temperature',
+                data: [],
+                borderColor: 'red',
+                fill: false,
+            }]
+        },
+    });
+
+    const cpuUsageChartInstance = new Chart(cpuUsageChart, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'CPU Usage',
+                data: [],
+                borderColor: 'blue',
+                fill: false,
+            }]
+        },
+    });
+
+    async function updateCharts() {
+        const response = await fetch('/data');
+        const data = await response.json();
+        document.getElementById('temp').innerHTML = "CPU Temp: " + data.temperature;
+        document.getElementById('cpu').innerHTML = "CPU Usage: " + data.cpuUsage;
+
+        // Update temperature chart
+        temperatureChartInstance.data.labels.push(new Date().toLocaleTimeString());
+        temperatureChartInstance.data.datasets[0].data.push(data.temperature);
+        temperatureChartInstance.update();
+
+        // Update CPU usage chart
+        cpuUsageChartInstance.data.labels.push(new Date().toLocaleTimeString());
+        cpuUsageChartInstance.data.datasets[0].data.push(data.cpuUsage);
+        cpuUsageChartInstance.update();
+
+        // Limit the number of data points to the defined maximum
+        if (temperatureChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+            temperatureChartInstance.data.datasets[0].data.shift();
+            temperatureChartInstance.data.labels.shift(); // Also shift corresponding label
+        }
+
+        if (cpuUsageChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+            cpuUsageChartInstance.data.datasets[0].data.shift();
+            cpuUsageChartInstance.data.labels.shift(); // Also shift corresponding label
+        }
+    }
+
+    updateCharts();
+    setInterval(updateCharts, 2000);
+
+
+
+
+    // start wardriving
+    const startButton = document.getElementById('startWardriving');
+    startButton.addEventListener('click', startWardriving);
+
+
+    async function startWardriving() {
+        const response = await fetch('/startWardriving');
+        const data = await response.json();
+        console.log(data);
+    }
+
+
+
+
+
+    // Show the modal on page load
+    const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+    interfaceModal.show();
+
+  
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Get the form and select elements
+        const interfaceForm = document.getElementById('interfaceForm');
+        const interfaceSelect = document.getElementById('interfaceSelect');
+
+        // Add submit event listener to the form
+        interfaceForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const selectedInterfaceIdx = interfaceSelect.value;
+            const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
+            // Create JSON payload
+            const payload = {
+                interfaceIdx: selectedInterfaceIdx,
+                interfaceName: selectedInterfaceName
+            };
+
+            // Make API call using fetch
+            fetch('/setInterface', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle API response if needed
+                console.log(data);
+                // Close the modal after submitting
+                interfaceModal.hide();
+                document.getElementById('selectedInterface').textContent = `Using Interface: ${selectedInterfaceName}`;
+
+            })
+            .catch(error => {
+                // Handle error if needed
+                console.error('Error:', error);
+            });
+        });
+    });
+
+
+</script>
+
+</body>
+</html>

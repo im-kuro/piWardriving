@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wardriving Tool</title>
+    <!-- Add Bootstrap CSS link -->
+    <link rel="stylesheet" href="Utils/static/bootstrap-5.3.1-dist/css/bootstrap.min.css">
+    <!-- Add Bootstrap JS and Popper.js -->
+    <script src="Utils/static/bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Add Chart.js -->
+    <script src="Utils/static/charts.js"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark">
+            <div class="container-fluid">
+                <img src="Utils/static/Kuro2ToneRedNOBG.png" style="height: 120px; width: 120px">
+                <a class="navbar-brand" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Wardriving Tool</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/analytics" style="font-weight: 1000;">Analytics</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/output">Output</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+	</div>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left half column -->
+            <div class="col-md-3 bg-primary text-white p-4">
+                <div>
+                    <h1 id="networksFound">Networks Found: </h1>
+                    <canvas id="networksFoundChart"></canvas>
+                </div>
+            </div>
+            <!-- ... (other columns) ... -->
+        </div>
+    </div>
+
+
+<!-- ... (inside the script tag in the HTML file) ... -->
+
+<script>
+    const networksFoundChart = document.getElementById('networksFoundChart').getContext('2d');
+
+    // Initialize the pie chart
+    const networksChart = new Chart(networksFoundChart, {
+        type: 'pie',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: ['red', 'blue', 'green'], // Customize the colors
+            }]
+        },
+        options: {
+            aspectRatio: 2, // Adjust this value to control the chart's aspect ratio
+            // Other options can be added here as needed
+        }
+    });
+
+
+
+
+    // Function to fetch and update the chart data
+    async function updateNetworksChart() {
+        const response = await fetch('/networks');
+        const data = await response.json();
+        
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+
+        // Update chart data
+        networksChart.data.labels = labels;
+        networksChart.data.datasets[0].data = values;
+        networksChart.update();
+
+        // Update the title
+        document.getElementById('networksFoundTitle').innerText = 'Networks Found: ' + labels.length;
+    }
+
+    // Initial call to update the chart and set interval for updates
+    updateNetworksChart();
+    setInterval(updateNetworksChart, 5000); // Update every 5 seconds
+</script>
+
+
+</body>
+</html>

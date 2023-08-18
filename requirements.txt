@@ -1,0 +1,6 @@
+colorama
+pywifi
+psutil
+jinja2
+sanic
+
