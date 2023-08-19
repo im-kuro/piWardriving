@@ -36,7 +36,7 @@
 
     <div class="container-fluid">
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark">
+        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark" style="padding: 0%; ">
             <div class="container-fluid">
                 <img src="Utils/static/Kuro2ToneRedNOBG.png" style="height: 95px; width: 95px">
                 <a class="navbar-brand" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Wardriving Tool</a>
@@ -56,36 +56,47 @@
                         </li>
                     </ul>
                 </div>
+                <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
             </div>
         </nav>
         <div class="row">
             <!-- Device Info Section -->
-            <div class="col-md-6 bg-primary text-white p-4">
+            <div class="col-md-3 bg-primary text-white p-4">
                 <h1>Device info</h1>
                 <h4>Hostname: {{ deviceInfo["hostname"] }}</h4>
                 <h4>OS: {{ deviceInfo["os"] }}</h4>
                 <h4>IP: {{ deviceInfo["ip"] }}</h4>
                 <h4>MAC: {{ deviceInfo["mac"] }}</h4>
                 <h4>RAM: {{ deviceInfo["ram"] }}</h4>
+
+            </div>
+
+            <div class="col-md-3 bg-primary text-white p-4">
                 <div class="">
-                    <h1>Interface info</h1>
-                    <h4 id="selectedInterface" value="{{ deviceInfo['chosenInterface'] }}">Using Interface: {{ deviceInfo["chosenInterfaceName"] }}</h4>
+                    
+                    
                 </div> 
             </div>
 
             <!-- Network Info Section -->
-            <div class="col-md-6 bg-secondary text-white p-4">
+            <div class="col-md-3 bg-secondary text-white p-4">
 
                 <h1>Network info</h1>
                 <h4 id="networkCount">Networks:</p>
+                <h4 id="unknownNetworks">Unknown:</h4>
                 <h4 id="wepNetworks">WEP:</h4>
                 <h4 id="wpaNetworks">WPA:</h4>
                 <h4 id="wpa2Networks">WPA2:</h4>
-                <div class="">
-                    <button id="startWardriving" class="btn btn-primary btn-lg">Start Wardriving😈</button>
-                </div>
+
  
             </div>
+            <div class="col-md-3 bg-secondary text-white p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button id="startWardriving" class="btn btn-primary btn-lg">Start Wardriving😈</button>
+                </div>
+
+            </div>
+
 
         </div>
 
@@ -122,6 +133,11 @@
                 fill: false,
             }]
         },
+        options: {
+            animation: {
+                duration: 0 // Set animation duration to 0 to disable animation
+            }
+        }
     });
 
     const cpuUsageChartInstance = new Chart(cpuUsageChart, {
@@ -135,7 +151,13 @@
                 fill: false,
             }]
         },
+        options: {
+            animation: {
+                duration: 0 // Set animation duration to 0 to disable animation
+            }
+        }
     });
+
 
     async function updateCharts() {
         const response = await fetch('/data');
@@ -186,57 +208,58 @@
 
 
 
- document.addEventListener("DOMContentLoaded", function () {
-    const interfaceForm = document.getElementById('interfaceForm');
-    const interfaceSelect = document.getElementById('interfaceSelect');
-    const selectedInterfaceLabel = document.getElementById('selectedInterface');
+    document.addEventListener("DOMContentLoaded", function () {
+        const interfaceForm = document.getElementById('interfaceForm');
+        const interfaceSelect = document.getElementById('interfaceSelect');
+        const selectedInterfaceLabel = document.getElementById('selectedInterface');
 
-    // Check if an interface is already chosen
-    const currentInterface = selectedInterfaceLabel.value;
-    if (!currentInterface) {
-        // If no interface is chosen, show the modal
-        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
-        interfaceModal.show();
+        // Check if an interface is already chosen
+        const currentInterface = selectedInterfaceLabel.getAttribute('value'); // Use getAttribute to get the value
 
-        // Add submit event listener to the form
-        interfaceForm.addEventListener('submit', function (event) {
-            event.preventDefault(); // Prevent default form submission
+        if (!currentInterface) {
+            // If no interface is chosen, show the modal
+            const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+            interfaceModal.show();
 
-            const selectedInterfaceIdx = interfaceSelect.value;
-            const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
-            // Create JSON payload
-            const payload = {
-                interfaceIdx: selectedInterfaceIdx,
-                interfaceName: selectedInterfaceName
-            };
+            // Add submit event listener to the form
+            interfaceForm.addEventListener('submit', function (event) {
+                event.preventDefault(); // Prevent default form submission
 
-            // Make API call using fetch
-            fetch('/setInterface', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Handle API response if needed
-                console.log(data);
-                // Close the modal after submitting
-                interfaceModal.hide();
-                selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceName}`;
+                const selectedInterfaceIdx = interfaceSelect.value;
+                const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
+                // Create JSON payload
+                const payload = {
+                    interfaceIdx: selectedInterfaceIdx,
+                    interfaceName: selectedInterfaceName
+                };
 
-            })
-            .catch(error => {
-                // Handle error if needed
-                console.error('Error:', error);
+                // Make API call using fetch
+                fetch('/setInterface', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Handle API response if needed
+                    console.log(data);
+                    // Close the modal after submitting
+                    interfaceModal.hide();
+                    selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceName}`;
+                })
+                .catch(error => {
+                    // Handle error if needed
+                    console.error('Error:', error);
+                });
             });
-        });
-    } else {
-        // If an interface is already chosen, update the label
-        selectedInterfaceLabel.value = currentInterface;
-    }
-});
+        } else {
+            // If an interface is already chosen, update the label
+            selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceLabel.textContent}`;
+        }
+    });
+
 
 
     const updateNetworkInfo = async () => {
@@ -248,6 +271,7 @@
             }
             // Update the content of HTML elements with the received data
             document.getElementById('networkCount').innerText = `Networks: ${data.networkCount}`;
+            document.getElementById('unknownNetworks').innerText = `Unknown: ${data.unknownEnc}`;
             document.getElementById('wepNetworks').innerText = `WEP: ${data.WEP}`;
             document.getElementById('wpaNetworks').innerText = `WPA: ${data.WPA}`;
             document.getElementById('wpa2Networks').innerText = `WPA2: ${data.WPA2}`;

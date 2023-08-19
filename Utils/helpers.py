@@ -1,5 +1,5 @@
 from colorama import Fore, Style, init
-import getpass
+import getpass, os, json
 
 
 # the class for the input/output functions
@@ -22,4 +22,13 @@ class IOFuncs:
 
     
     
-    
+class database:
+	def __init__(self) -> None:
+		self.path = "Utils/database/session.json"
+  
+	def writeToDB(self, objPath: str, jsonData) -> bool:
+		DB = json.loads(open(self.path).read())[objPath] = jsonData
+		json.dump(DB, open(self.path, "w"))
+  
+	def readFromDB(self, objPath: str) -> dict:
+		return json.loads(open(self.path).read())[objPath]

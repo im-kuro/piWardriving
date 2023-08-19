@@ -5,97 +5,206 @@
     <title>Wardriving Tool</title>
     <!-- Add Bootstrap CSS link -->
     <link rel="stylesheet" href="Utils/static/bootstrap-5.3.1-dist/css/bootstrap.min.css">
-    <!-- Add Bootstrap JS and Popper.js -->
-    <script src="Utils/static/bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js"></script>
     <!-- Add Chart.js -->
     <script src="Utils/static/charts.js"></script>
 </head>
+
 <body>
-    <div class="container-fluid">
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark">
-            <div class="container-fluid">
-                <img src="Utils/static/Kuro2ToneRedNOBG.png" style="height: 120px; width: 120px">
-                <a class="navbar-brand" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Wardriving Tool</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item active">
-                            <a class="nav-link" href="/">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/analytics" style="font-weight: 1000;">Analytics</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/output">Output</a>
-                        </li>
-                    </ul>
-                </div>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark" style="padding: 0%;">
+        <div class="container-fluid">
+            <img src="Utils/static/Kuro2ToneRedNOBG.png" style="height: 95px; width: 95px">
+            <a class="navbar-brand" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Wardriving Tool</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analytics" style="font-weight: 1000;">Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/output">Output</a>
+                    </li>
+                </ul>
             </div>
-        </nav>
-	</div>
+            <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
+        </div>
+    </nav>
+
     <div class="container-fluid">
         <div class="row">
-            <!-- Left half column -->
-            <div class="col-md-3 bg-primary text-white p-4">
-                <div>
-                    <h1 id="networksFound">Networks Found: </h1>
-                    <canvas id="networksFoundChart"></canvas>
+            <!-- Left half column - Device Analytics -->
+            <div class="col-md-3 text-black p-4">
+                <h3>Device Analytics</h3>
+                <!-- Temperature Chart -->
+                <div class="col-sm-12">
+                    <canvas id="temperatureChart"></canvas>
+                    <h5 id="temp">CPU Temp: </h5>
+                </div>
+                <!-- CPU Usage Chart -->
+                <div class="col-sm-12">
+                    <canvas id="cpuUsageChart"></canvas>
+                    <h5 id="cpu">CPU Usage: </h5>
                 </div>
             </div>
-            <!-- ... (other columns) ... -->
+
+        <!-- Middle column - Networks Chart -->
+        <div class="col-md-3 text-black p-4">
+            <h3>Networks Chart</h3>
+            <canvas id="encryptionChart"></canvas>
+        </div>
+
+
+            <!-- Right column - Network Info -->
+            <div class="col-md-6 bg-primary text-white p-4">
+                <h3>Network Info</h3>
+                <!-- Add network-related information here -->
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Bottom left column - Additional Info -->
+            <div class="col-md-6 bg-secondary text-white p-4">
+                <h3>Additional Info</h3>
+                <!-- Add additional information here -->
+            </div>
+
+            <!-- Bottom right column - Additional Info -->
+            <div class="col-md-6 bg-secondary text-white p-4">
+                <h3>Additional Info</h3>
+                <!-- Add additional information here -->
+            </div>
         </div>
     </div>
 
+    <script>
+    const MAX_DATA_POINTS = 30;
+    const temperatureChart = document.getElementById('temperatureChart').getContext('2d');
+    const cpuUsageChart = document.getElementById('cpuUsageChart').getContext('2d');
 
-<!-- ... (inside the script tag in the HTML file) ... -->
-
-<script>
-    const networksFoundChart = document.getElementById('networksFoundChart').getContext('2d');
-
-    // Initialize the pie chart
-    const networksChart = new Chart(networksFoundChart, {
-        type: 'pie',
+    const temperatureChartInstance = new Chart(temperatureChart, {
+        type: 'line',
         data: {
             labels: [],
             datasets: [{
+                label: 'Temperature',
                 data: [],
-                backgroundColor: ['red', 'blue', 'green'], // Customize the colors
+                borderColor: 'red',
+                fill: false,
+                
+
             }]
         },
         options: {
-            aspectRatio: 2, // Adjust this value to control the chart's aspect ratio
-            // Other options can be added here as needed
+            animation: {
+                duration: 0 // Set animation duration to 0 to disable animation
+            }
+        }
+    });
+
+    const cpuUsageChartInstance = new Chart(cpuUsageChart, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'CPU Usage',
+                data: [],
+                borderColor: 'blue',
+                fill: false,
+
+            }]
+        },
+        options: {
+            animation: {
+                duration: 0 // Set animation duration to 0 to disable animation
+            }
         }
     });
 
 
-
-
-    // Function to fetch and update the chart data
-    async function updateNetworksChart() {
-        const response = await fetch('/networks');
+    async function updateCharts() {
+        const response = await fetch('/data');
         const data = await response.json();
-        
-        const labels = Object.keys(data);
-        const values = Object.values(data);
+        document.getElementById('temp').innerHTML = "CPU Temp: " + data.temperature;
+        document.getElementById('cpu').innerHTML = "CPU Usage: " + data.cpuUsage;
 
-        // Update chart data
-        networksChart.data.labels = labels;
-        networksChart.data.datasets[0].data = values;
-        networksChart.update();
+        // Update temperature chart
+        temperatureChartInstance.data.labels.push(new Date().toLocaleTimeString());
+        temperatureChartInstance.data.datasets[0].data.push(data.temperature);
+        temperatureChartInstance.update();
 
-        // Update the title
-        document.getElementById('networksFoundTitle').innerText = 'Networks Found: ' + labels.length;
+        // Update CPU usage chart
+        cpuUsageChartInstance.data.labels.push(new Date().toLocaleTimeString());
+        cpuUsageChartInstance.data.datasets[0].data.push(data.cpuUsage);
+        cpuUsageChartInstance.update();
+
+        // Limit the number of data points to the defined maximum
+        if (temperatureChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+            temperatureChartInstance.data.datasets[0].data.shift();
+            temperatureChartInstance.data.labels.shift(); // Also shift corresponding label
+        }
+
+        if (cpuUsageChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+            cpuUsageChartInstance.data.datasets[0].data.shift();
+            cpuUsageChartInstance.data.labels.shift(); // Also shift corresponding label
+        }
     }
 
-    // Initial call to update the chart and set interval for updates
-    updateNetworksChart();
-    setInterval(updateNetworksChart, 5000); // Update every 5 seconds
-</script>
+    updateCharts();
+    setInterval(updateCharts, 2000);
 
 
+const encryptionChart = document.getElementById('encryptionChart').getContext('2d');
+
+// Initialize the pie chart
+const encryptionPieChart = new Chart(encryptionChart, {
+    type: 'pie',
+    data: {
+        labels: ['WEP', 'WPA', 'WPA2', 'WPA3', 'Unknown'],
+        datasets: [{
+            data: [],
+            backgroundColor: ['red', 'blue', 'green', 'purple', 'gray'], // Customize the colors
+        }]
+    },
+    options: {
+        aspectRatio: 1, // Adjust this value to control the chart's aspect ratio
+        // Other options can be added here as needed
+    }
+});
+
+// Function to fetch and update the encryption data for the pie chart
+async function updateEncryptionChart() {
+    const response = await fetch('/networks');
+    const data = await response.json();
+    
+    const wpaCount = data.WPA || 0;
+    const wpa2Count = data.WPA2 || 0;
+    const wpa3Count = data.WPA3 || 0;
+    const wepCount = data.WEP || 0;
+    const unknownCount = data.unknownEnc || 0;
+
+    // Update chart data
+    encryptionPieChart.data.datasets[0].data = [wepCount, wpaCount, wpa2Count, wpa3Count, unknownCount];
+    encryptionPieChart.data.labels = [
+        `WEP (${wepCount})`,
+        `WPA (${wpaCount})`,
+        `WPA2 (${wpa2Count})`,
+        `WPA3 (${wpa3Count})`,
+        `Unknown (${unknownCount})`
+    ];
+    encryptionPieChart.update();
+}
+
+
+// Initial call to update the chart and set interval for updates
+updateEncryptionChart();
+setInterval(updateEncryptionChart, 5000); // Update every 5 seconds
+
+
+    </script>
 </body>
 </html>

@@ -2,7 +2,7 @@ from sanic import Sanic
 from sanic.response import json, html
 import platform,socket,re,uuid,psutil,subprocess, pywifi
 from jinja2 import Environment, FileSystemLoader
-import tools
+import tools, helpers
 
 
 
@@ -14,7 +14,10 @@ template_dir = 'Utils/static/'  # Path to your template directory
 env = Environment(loader=FileSystemLoader(template_dir))
 
 app.ctx.interfaces = tools.toolkit.showInterfaces()
-app.ctx.interface = None
+if helpers.database().readFromDB("interfaceInfo") is not None:
+    app.ctx.interface = helpers.database().readFromDB("interfaceInfo")["idx"]
+    app.ctx.interfaceName = helpers.database().readFromDB("interfaceInfo")["name"]
+else: app.ctx.interface = None; app.ctx.interfaceName = None
 """
 
 FRONT END CODE HERE
@@ -36,8 +39,7 @@ async def index(request):
         "ip": socket.gethostbyname(socket.gethostname()),
         "hostname": socket.gethostname(),
         "interfaces": app.ctx.interfaces,
-        "chosenInterface": app.ctx.interface,
-        "chosenInterfaceName": app.ctx.interface if app.ctx.interface is not None else None
+        "interfaceInfo": {"idx": app.ctx.interface, "name": app.ctx.interfaceName}
 
     })
     
@@ -48,7 +50,8 @@ async def index(request):
 async def analytics(request):
     template = env.get_template('analytics.html')
     rendered_template = template.render(deviceInfo={
-        
+        "interfaces": app.ctx.interfaces,
+        "interfaceInfo": {"idx": app.ctx.interface, "name": app.ctx.interfaceName}
     })
     return html(rendered_template)
 
@@ -71,7 +74,9 @@ BACK END CODE HERE
 @app.route('/setInterface', methods=["POST"])
 async def setInterface(request):
     app.ctx.interface = request.json["interfaceIdx"]
+    app.ctx.interfaceName = request.json["interfaceName"]
     tools.toolkit.__init__(app.ctx.interface)
+    await helpers.database().writeToDB("interfaceInfo", {"interfaceInfo":{"idx": app.ctx.interface, "name": app.ctx.interfaceName}})
     return json({"status": "success", "interface": app.ctx.interface})
 
 
@@ -86,15 +91,29 @@ async def getData(request):
     return json({'temperature': tools.toolkit.get_cpu_temperature(), 'cpuUsage': tools.toolkit.get_cpu_usage()})
 
 
+@app.route('/savedNetworks', methods=['GET'])
+async def getSaved(request):
+    return json({"savedNetworks": helpers.database().readFromDB("savedNetworks")})
+
 
 @app.route('/networks', methods=['GET'])
-async def get_networks(request):
+async def getNetworks(request):
     
     networkRes = await tools.toolkit.scan_wifi_networks(app.ctx.interface)
     
     if networkRes is None:
         return json({"status": "error", "message": "No interface selected"})
     
+    savedNetworks = helpers.database().readFromDB("savedNetworks")
+    
+    
+    for network in networkRes.values():
+        if network["ssid"] in savedNetworks:
+            network["saved"] = True
+        else:
+            network["saved"] = False
+    
+    unknown = 0
     WPANetworks = 0
     WPA2Networks = 0
     WPA3Networks = 0
@@ -102,7 +121,13 @@ async def get_networks(request):
     networkCount = 0
     for network_info in networkRes.values():
         networkCount += 1
-        encryption_type = network_info["encryption"][0]  # Assuming the encryption type is a single integer
+        encryption = network_info["encryption"]
+
+        if not encryption:  # Check if the encryption list is empty
+            unknown =+ 1
+            continue
+
+        encryption_type = encryption[0]  # Get the first encryption type
         
         if encryption_type == 4:
             WPA2Networks += 1
@@ -120,7 +145,8 @@ async def get_networks(request):
         "WPA": WPANetworks,
         "WPA2": WPA2Networks,
         "WPA3": WPA3Networks,
-        "WEP": WEPNetworks
+        "WEP": WEPNetworks,
+        "unknownEnc": unknown
     })
 
 
