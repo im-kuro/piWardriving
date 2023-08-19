@@ -2,6 +2,8 @@
 import pywifi, subprocess, json, time
 from pywifi import const
 import psutil,subprocess, pywifi
+from gpiozero import CPUTemperature
+import asyncio
 
 wifi = pywifi.PyWiFi()
 
@@ -17,20 +19,13 @@ class toolkit():
 		interfaces = wifi.interfaces()
 		interfacesJson = {}
 		for idx, iface in enumerate(interfaces):
-			interfacesJson[iface.name()] = {"idx": idx, "interfaceName": iface.name()}
+			interfacesJson[idx] = {"idx": idx, "interfaceName": iface.name()}
 		return interfacesJson
 
-	def get_cpu_temperature_linux():
+	def get_cpu_temperature():
 		try:
-			output = subprocess.check_output(['sensors']).decode('utf-8')
-			temperature_lines = [line for line in output.split('\n') if 'Core 0' in line]
-			
-			if temperature_lines:
-				temperature = temperature_lines[0].split(':')[1].strip()
-				return round(float(temperature))  # Convert temperature to float before rounding
-			else:
-				print("Core temperature line not found in output.")
-				return None
+			temperatures = CPUTemperature().temperature
+			return round(temperatures)
 		except Exception as e:
 			print(f"Error fetching CPU temperature: {e}")
 			return None
@@ -42,21 +37,25 @@ class toolkit():
 			print(f"Error fetching CPU usage: {e}")
 			return None
    
-	def scan_wifi_networks(interface:int=0):
+	async def scan_wifi_networks(interface: int = 0):
+		if interface is None:
+			print("!CRITICAL! No interface selected, please select one")
+			return None
 		iface = wifi.interfaces()[int(interface)]
 		iface.scan()
-		time.sleep(1)
+		# give time for scanning
+		await asyncio.sleep(6)
 		scan_results = iface.scan_results()
 
 		network_info = {}
 		for result in scan_results:
-			network_info[result.ssid]={
+			network_info[f"{result.ssid}"]={
 				"SSID": result.ssid,
 				"BSSID": result.bssid,
-				"Signal Strength": result.signal,
-				"Encryption": result.akm
+				"signalStrength": result.signal,
+				"encryption": result.akm
 			}
-		print(network_info)
+
 		return network_info
 
 	def setupAP(interface:int=0):

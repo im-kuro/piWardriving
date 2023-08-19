@@ -69,7 +69,7 @@
                 <h4>RAM: {{ deviceInfo["ram"] }}</h4>
                 <div class="">
                     <h1>Interface info</h1>
-                    <h4 id="selectedInterface">Using Interface: </h4>
+                    <h4 id="selectedInterface" value="{{ deviceInfo['chosenInterface'] }}">Using Interface: {{ deviceInfo["chosenInterfaceName"] }}</h4>
                 </div> 
             </div>
 
@@ -81,7 +81,6 @@
                 <h4 id="wepNetworks">WEP:</h4>
                 <h4 id="wpaNetworks">WPA:</h4>
                 <h4 id="wpa2Networks">WPA2:</h4>
-                <h4 id="wpaN3etworks">WEP3:</h4>
                 <div class="">
                     <button id="startWardriving" class="btn btn-primary btn-lg">Start Wardriving😈</button>
                 </div>
@@ -108,7 +107,7 @@
     <!-- Add Chart.js -->
     <script  src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const MAX_DATA_POINTS = 20;
+    const MAX_DATA_POINTS = 30;
     const temperatureChart = document.getElementById('temperatureChart').getContext('2d');
     const cpuUsageChart = document.getElementById('cpuUsageChart').getContext('2d');
 
@@ -187,16 +186,17 @@
 
 
 
-    // Show the modal on page load
-    const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
-    interfaceModal.show();
+ document.addEventListener("DOMContentLoaded", function () {
+    const interfaceForm = document.getElementById('interfaceForm');
+    const interfaceSelect = document.getElementById('interfaceSelect');
+    const selectedInterfaceLabel = document.getElementById('selectedInterface');
 
-  
-
-    document.addEventListener("DOMContentLoaded", function () {
-        // Get the form and select elements
-        const interfaceForm = document.getElementById('interfaceForm');
-        const interfaceSelect = document.getElementById('interfaceSelect');
+    // Check if an interface is already chosen
+    const currentInterface = selectedInterfaceLabel.value;
+    if (!currentInterface) {
+        // If no interface is chosen, show the modal
+        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+        interfaceModal.show();
 
         // Add submit event listener to the form
         interfaceForm.addEventListener('submit', function (event) {
@@ -224,7 +224,7 @@
                 console.log(data);
                 // Close the modal after submitting
                 interfaceModal.hide();
-                document.getElementById('selectedInterface').textContent = `Using Interface: ${selectedInterfaceName}`;
+                selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceName}`;
 
             })
             .catch(error => {
@@ -232,8 +232,34 @@
                 console.error('Error:', error);
             });
         });
-    });
+    } else {
+        // If an interface is already chosen, update the label
+        selectedInterfaceLabel.value = currentInterface;
+    }
+});
 
+
+    const updateNetworkInfo = async () => {
+        try {
+            const response = await fetch('/networks'); // Fetch data from /networks endpoint
+            const data = await response.json(); // Parse JSON response
+            if (data["status"] == "error") {
+                throw new Error(data.message);
+            }
+            // Update the content of HTML elements with the received data
+            document.getElementById('networkCount').innerText = `Networks: ${data.networkCount}`;
+            document.getElementById('wepNetworks').innerText = `WEP: ${data.WEP}`;
+            document.getElementById('wpaNetworks').innerText = `WPA: ${data.WPA}`;
+            document.getElementById('wpa2Networks').innerText = `WPA2: ${data.WPA2}`;
+
+        } catch (error) {
+            console.error('Error updating network info:', error);
+        }
+    };
+
+    // Call the updateNetworkInfo function initially and then at intervals
+    updateNetworkInfo();
+    setInterval(updateNetworkInfo, 10000); // Update every 5 seconds
 
 </script>
 
