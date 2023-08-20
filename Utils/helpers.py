@@ -21,14 +21,36 @@ class IOFuncs:
 			return kwargs
 
     
-    
 class database:
 	def __init__(self) -> None:
 		self.path = "Utils/database/session.json"
   
 	def writeToDB(self, objPath: str, jsonData) -> bool:
-		DB = json.loads(open(self.path).read())[objPath] = jsonData
+		if objPath is None:
+			DB = json.loads(open(self.path).read())[objPath] = {"settings": {}, "interfaceInfo": {}}
+		else:
+			DB = json.loads(open(self.path).read())
+			DB[objPath] = jsonData
 		json.dump(DB, open(self.path, "w"))
   
 	def readFromDB(self, objPath: str) -> dict:
 		return json.loads(open(self.path).read())[objPath]
+
+	def __initDatabase__(self):
+		try:
+			with open(self.path, 'w') as file:
+				json.dump(
+				    {	
+						"savedNetworks": {},
+				        "settings": {
+				            "interfaceInfo": {
+				                "idx": None,
+				                "name": None
+				            },
+				            "darkmode": False
+				        }
+				    },
+				    file, indent=4  # You can adjust the indentation as needed
+				)
+		except Exception as e:
+		    print(f"Error initializing database: {e}")

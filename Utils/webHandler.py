@@ -13,10 +13,15 @@ app.static('Utils/static/', 'Utils/static/', directory_view=True, name="static")
 template_dir = 'Utils/static/'  # Path to your template directory
 env = Environment(loader=FileSystemLoader(template_dir))
 
+
+
+# init the session database
+helpers.database().__initDatabase__()
+
 app.ctx.interfaces = tools.toolkit.showInterfaces()
-if helpers.database().readFromDB("interfaceInfo") is not None:
-    app.ctx.interface = helpers.database().readFromDB("interfaceInfo")["idx"]
-    app.ctx.interfaceName = helpers.database().readFromDB("interfaceInfo")["name"]
+if helpers.database().readFromDB("settings") is not None:
+    app.ctx.interface = helpers.database().readFromDB("settings")["interfaceInfo"]["idx"]
+    app.ctx.interfaceName = helpers.database().readFromDB("settings")["interfaceInfo"]["name"]
 else: app.ctx.interface = None; app.ctx.interfaceName = None
 """
 
@@ -76,10 +81,21 @@ async def setInterface(request):
     app.ctx.interface = request.json["interfaceIdx"]
     app.ctx.interfaceName = request.json["interfaceName"]
     tools.toolkit.__init__(app.ctx.interface)
-    await helpers.database().writeToDB("interfaceInfo", {"interfaceInfo":{"idx": app.ctx.interface, "name": app.ctx.interfaceName}})
+    helpers.database().writeToDB("interfaceInfo", {"interfaceInfo":{"idx": app.ctx.interface, "name": app.ctx.interfaceName}})
     return json({"status": "success", "interface": app.ctx.interface})
 
-
+@app.route('/setSettings', methods=["POST"])
+async def setSettings(request):
+    settingCall = request.json["call"]
+    settingPayload = request.json["payload"]
+    try:
+        if settingCall == "darkmode": # options
+            code = 69
+            helpers.database().writeToDB("settings.darkmode", settingPayload)
+            return json({"status": "success", "message": "Darkmode set to " + settingPayload})
+        
+    except Exception as e:
+        return json({"status": "error", "message": str(e), "code": code})
 
 @app.route('/startWardriving', methods=["GET"])
 async def startWardrive(request):
@@ -111,15 +127,19 @@ async def getNetworks(request):
         if network["ssid"] in savedNetworks:
             network["saved"] = True
         else:
+            savedNetworks[network["ssid"]] = network  
+            helpers.database().writeToDB("savedNetworks", savedNetworks) 
             network["saved"] = False
-    
+            
     unknown = 0
+    unknownSaved = 0
     WPANetworks = 0
     WPA2Networks = 0
     WEPNetworks = 0
     savedWPANetworks = 0
     savedWPA2Networks = 0
     savedWEPNetworks = 0
+    
     
     
     
@@ -134,24 +154,30 @@ async def getNetworks(request):
             unknown =+ 1
             continue
 
-        encryption_type = encryption[0]  # Get the first encryption type
         
-        if encryption_type == 4:
+        if network_info["encryption"][0] == 4:
             WPA2Networks += 1
-        elif encryption_type == 2 or encryption_type == 3:
+        elif network_info["encryption"][0] == 2 or network_info["encryption"][0] == 3:
             WPANetworks += 1
-        elif encryption_type == 1:
+        elif network_info["encryption"][0] == 1:
             WEPNetworks += 1
 
-    for network in savedNetworks:
+
+    for network in savedNetworks.values():
+        if not network["encryption"]:  # Check if the encryption list is empty
+            unknownSaved =+ 1
+            continue
+       
         savedNetworksCount += 1
-        if network["encryption"] == 4:
+        if network["encryption"][0] == 4:
             savedWPA2Networks += 1
-        elif network["encryption"] == 2 or network["encryption"] == 3:
+        elif network["encryption"][0] == 2 or network["encryption"][0] == 3:
             savedWPANetworks += 1
-        elif network["encryption"] == 1:
+        elif network["encryption"][0] == 1:
             savedWEPNetworks += 1
 
+   
+    
     return json({
         "networks": networkRes,
         "savedNetworks": savedNetworks,
@@ -163,10 +189,13 @@ async def getNetworks(request):
         "savedWPA": savedWPANetworks,
         "savedWPA2": savedWPA2Networks,
         "savedWEP": savedWEPNetworks,
+        "unknownSaved": unknownSaved,
         "unknownEnc": unknown
     })
 
 
 
+
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=6969)
+    helpers.database().__initDatabase__()

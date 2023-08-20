@@ -10,6 +10,30 @@
 </head>
 
 <body>
+    <div class="modal" id="interfaceModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="interfaceForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Select Interface</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>Please select the interface you want to use:</p>
+                        <select class="form-select" id="interfaceSelect" aria-label="Default select example">
+                            {% for interface_name, interface_data in deviceInfo.interfaces.items() %}
+                                <option value="{{ interface_data.idx }}">{{ interface_data.interfaceName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark" style="padding: 0%;">
         <div class="container-fluid">
@@ -38,7 +62,7 @@
     <div class="container-fluid">
         <div class="row">
             <!-- Left half column - Device Analytics -->
-            <div class="col-md-3 text-black p-4">
+            <div class="col-sm-3 text-black p-4">
                 <h2>Device Analytics</h2>
                 <!-- Temperature Chart -->
                 <div class="col-sm-12">
@@ -53,28 +77,35 @@
             </div>
 
         <!-- Middle column - Networks Chart -->
-        <div class="col-md-3 text-black p-4">
+        <div class="col-sm-3 text-black p-4">
             <h2>Networks Encryption</h2>
             <canvas id="encryptionPieChartInRange"></canvas>
             <canvas id="encryptionChartSaved"></canvas>
         </div>
 
 
+
             <!-- Right column - Network Info -->
-            <div class="col-md-2  text-black p-4">
+            <div class="col-sm-2  text-black p-4">
                 <h2>Networks Info</h2>
                 <h4 id="networkCount">In Range: </h4>
                 <h4 id="totalNetworks">Total Found: </h4>
                 <br>
+                <h3>In Range</h3>
                 <h4 id="unknownNetworks">Unknown:</h4>
                 <h4 id="wepNetworks">WEP:</h4>
                 <h4 id="wpaNetworks">WPA:</h4>
-                <h4 id="wpa2Networks">WPA2:</h4>
+                <h4 id="wpa2Networks">WPA2:</h4>\
+                <h3>Total Count</h3>
+                <h4 id="unknownNetworksSaved">Unknown:</h4>
+                <h4 id="wepNetworksSaved">Total WEP:</h4>
+                <h4 id="wpaNetworksSaved">Total WPA:</h4>
+                <h4 id="wpa2NetworksSaved">Total WPA2:</h4>
             </div>
                         <!-- Middle column - Strongest Signals Bar Chart -->
-            <div class="col-md-4 text-black p-4">
+            <div class="col-sm-4 text-black p-4">
                 <h2>Strongest Signals</h2>
-                <button id="toggleSSIDsBtn" onclick="toggleSSIDs()" class="btn bg-primary-subtle">Toggle SSIDs</button>
+                <button id="toggleSSIDsBtn" onclick="toggleSSIDs()" class="btn bg-primary-subtle">Hide SSIDs</button>
 
                 <canvas id="strongestSignalsChart"></canvas>
             </div>
@@ -102,7 +133,10 @@
             </div>
         </div>
     </div>
-
+    <!-- Add Bootstrap JS and Popper.js -->
+    <script src="Utils/static/bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Add Chart.js -->
+    <script  src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
     const MAX_DATA_POINTS = 20;
     const temperatureChart = document.getElementById('temperatureChart').getContext('2d');
@@ -305,7 +339,10 @@ async function updateNetworkCharts() {
     document.getElementById('wepNetworks').innerText = `WEP: ${data.WEP}`;
     document.getElementById('wpaNetworks').innerText = `WPA: ${data.WPA}`;
     document.getElementById('wpa2Networks').innerText = `WPA2: ${data.WPA2}`;
-
+    document.getElementById('unknownNetworksSaved').innerText = `Unknown: ${data.unknownSaved}`;
+    document.getElementById('wepNetworksSaved').innerText = `WEP: ${data.savedWEP}`;
+    document.getElementById('wpaNetworksSaved').innerText = `WPA: ${data.savedWPA}`;
+    document.getElementById('wpa2NetworksSaved').innerText = `WPA2: ${data.savedWPA2}`;
 
     // Update the strongest signals bar chart data
     const nearestNetworks = Object.values(data.networks) || [];
@@ -313,7 +350,8 @@ async function updateNetworkCharts() {
     const limitedNetworks = sortedNetworks.slice(0, 10); // Limit to max 10 data points
 
     const signalData = limitedNetworks.map(network => (showSSIDs ? network.signalStrength : 0));
-    const ssidData = limitedNetworks.map(network => '');
+    const ssidData = limitedNetworks.map(network => (showSSIDs ? network.ssid : '')); // Update this line
+
 
     // Update chart data
     strongestSignalsBarChart.data.labels = ssidData;
@@ -336,6 +374,69 @@ function toggleSSIDs() {
 }
 
 
+function toggleSSIDs() {
+    showSSIDs = !showSSIDs; // Toggle the state
+    // Check if the container element exists before trying to access its style
+    const container = document.getElementById('strongestSignalsContainer');
+    
+
+    if (showSSIDs) {
+        document.getElementById('toggleSSIDsBtn').innerText = 'Hide SSIDs';
+    } else {
+        document.getElementById('toggleSSIDsBtn').innerText = 'Show SSIDs';
+    }
+    updateNetworkCharts(); // Call the chart update function
+}
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const interfaceForm = document.getElementById('interfaceForm');
+    const interfaceSelect = document.getElementById('interfaceSelect');
+    const selectedInterfaceLabel = document.getElementById('selectedInterface');
+    // Check if an interface is already chosen
+    const currentInterface = selectedInterfaceLabel.getAttribute('value'); // Use getAttribute to get the value | Return None if not set
+    console.log(currentInterface);
+    if (currentInterface == "None") {
+        // If no interface is chosen, show the modal
+        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+        interfaceModal.show();
+        // Add submit event listener to the form
+        interfaceForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+            const selectedInterfaceIdx = interfaceSelect.value;
+            const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
+            // Create JSON payload
+            const payload = {
+                interfaceIdx: selectedInterfaceIdx,
+                interfaceName: selectedInterfaceName
+            };
+            // Make API call using fetch
+            fetch('/setInterface', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle API response if needed
+                console.log(data);
+                // Close the modal after submitting
+                interfaceModal.hide();
+                selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceName}`;
+            })
+            .catch(error => {
+                // Handle error if needed
+                console.error('Error:', error);
+            });
+        });
+    } else {
+        // If an interface is already chosen, update the label
+        selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceLabel.textContent}`;
+    }
+    });
     </script>
 </body>
 </html>

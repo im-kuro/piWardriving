@@ -63,7 +63,7 @@
                 <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
             </div>
         </nav>
-        <div class="row">
+        <div class="row bg-secondary">
             <!-- Device Info Section -->
             <div class="col-md-3 bg-primary text-white p-4">
                 <h1>Device info</h1>
@@ -87,6 +87,13 @@
 
                 <h1>Network info</h1>
                 <h4 id="networkCount">Networks:</p>
+                <h4 id="totalNetworks">Total Found: </h4>
+                <div class="d-flex justify-content-between align-items-center">
+                    <button id="startWardriving" class="btn btn-primary btn-lg">Start Wardriving😈</button>
+                </div>
+ 
+            </div>
+            <div class="col-md-3 bg-secondary text-white p-4">
                 <h4 id="unknownNetworks">Unknown:</h4>
                 <h4 id="wepNetworks">WEP:</h4>
                 <h4 id="wpaNetworks">WPA:</h4>
@@ -94,10 +101,7 @@
 
  
             </div>
-            <div class="col-md-3 bg-secondary text-white p-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <button id="startWardriving" class="btn btn-primary btn-lg">Start Wardriving😈</button>
-                </div>
+
 
             </div>
 
@@ -220,7 +224,7 @@
         // Check if an interface is already chosen
         const currentInterface = selectedInterfaceLabel.getAttribute('value'); // Use getAttribute to get the value
 
-        if (!currentInterface) {
+        if (currentInterface == "None") {
             // If no interface is chosen, show the modal
             const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
             interfaceModal.show();
@@ -275,6 +279,8 @@
             }
             // Update the content of HTML elements with the received data
             document.getElementById('networkCount').innerText = `Networks: ${data.networkCount}`;
+            document.getElementById('totalNetworks').innerText = `Total Networks: ${data.savedNetworksCount}`;
+            
             document.getElementById('unknownNetworks').innerText = `Unknown: ${data.unknownEnc}`;
             document.getElementById('wepNetworks').innerText = `WEP: ${data.WEP}`;
             document.getElementById('wpaNetworks').innerText = `WPA: ${data.WPA}`;
@@ -289,14 +295,54 @@
     updateNetworkInfo();
     setInterval(updateNetworkInfo, 7000); // Update every 7 seconds
 
+
+
+    // Initial call to update the chart and set interval for updates
+    updateNetworkInfo();
+    setInterval(updateNetworkInfo, 7000); // Update every 7 seconds
+
     // Dark mode toggle logic
     const darkModeToggle = document.getElementById('darkModeToggle');
     const body = document.body;
     
-    darkModeToggle.addEventListener('click', () => {
+
+    darkModeToggle.addEventListener('click', async () => {
         console.log('Dark mode toggle clicked');
-        body.classList.toggle('dark-mode'); // Toggle the 'dark-mode' class
+
+        // Get current dark mode status
+        const isDarkMode = body.classList.contains('dark-mode');
+
+        // Update body style and class based on dark mode status
+        if (!isDarkMode) {
+            body.style.backgroundColor = 'grey';
+            body.classList.add('dark-mode');
+        } else {
+            body.style.backgroundColor = '';
+            body.classList.remove('dark-mode');
+        }
+
+        // Prepare payload for API call
+        const darkModePayload = {
+            call: 'darkmode',
+            payload: !isDarkMode
+        };
+
+        // Make API call to set dark mode status
+        try {
+            const response = await fetch('/setSettings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(darkModePayload)
+            });
+            const data = await response.json();
+            console.log('Dark mode API response:', data);
+        } catch (error) {
+            console.error('Error setting dark mode:', error);
+        }
     });
+
 
 
 
