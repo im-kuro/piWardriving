@@ -31,7 +31,7 @@
                     </li>
                 </ul>
             </div>
-            <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
+            <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >Using Interface: {{ deviceInfo["interfaceInfo"]["name"] }}</h5>
         </div>
     </nav>
 
@@ -39,7 +39,7 @@
         <div class="row">
             <!-- Left half column - Device Analytics -->
             <div class="col-md-3 text-black p-4">
-                <h3>Device Analytics</h3>
+                <h2>Device Analytics</h2>
                 <!-- Temperature Chart -->
                 <div class="col-sm-12">
                     <canvas id="temperatureChart"></canvas>
@@ -54,16 +54,38 @@
 
         <!-- Middle column - Networks Chart -->
         <div class="col-md-3 text-black p-4">
-            <h3>Networks Chart</h3>
-            <canvas id="encryptionChart"></canvas>
+            <h2>Networks Encryption</h2>
+            <canvas id="encryptionPieChartInRange"></canvas>
+            <canvas id="encryptionChartSaved"></canvas>
         </div>
 
 
             <!-- Right column - Network Info -->
-            <div class="col-md-6 bg-primary text-white p-4">
-                <h3>Network Info</h3>
-                <!-- Add network-related information here -->
+            <div class="col-md-2  text-black p-4">
+                <h2>Networks Info</h2>
+                <h4 id="networkCount">In Range: </h4>
+                <h4 id="totalNetworks">Total Found: </h4>
+                <br>
+                <h4 id="unknownNetworks">Unknown:</h4>
+                <h4 id="wepNetworks">WEP:</h4>
+                <h4 id="wpaNetworks">WPA:</h4>
+                <h4 id="wpa2Networks">WPA2:</h4>
             </div>
+                        <!-- Middle column - Strongest Signals Bar Chart -->
+            <div class="col-md-4 text-black p-4">
+                <h2>Strongest Signals</h2>
+                <button id="toggleSSIDsBtn" onclick="toggleSSIDs()" class="btn bg-primary-subtle">Toggle SSIDs</button>
+
+                <canvas id="strongestSignalsChart"></canvas>
+            </div>
+
+            <!-- Right column - Network Info -->
+            <div class="col-md-3  text-black p-4">
+
+
+
+            </div>
+
         </div>
 
         <div class="row">
@@ -82,9 +104,11 @@
     </div>
 
     <script>
-    const MAX_DATA_POINTS = 30;
+    const MAX_DATA_POINTS = 20;
     const temperatureChart = document.getElementById('temperatureChart').getContext('2d');
     const cpuUsageChart = document.getElementById('cpuUsageChart').getContext('2d');
+        
+
 
     const temperatureChartInstance = new Chart(temperatureChart, {
         type: 'line',
@@ -101,7 +125,7 @@
         },
         options: {
             animation: {
-                duration: 0 // Set animation duration to 0 to disable animation
+                duration: 1 // Set animation duration to 0 to disable animation
             }
         }
     });
@@ -120,8 +144,79 @@
         },
         options: {
             animation: {
-                duration: 0 // Set animation duration to 0 to disable animation
+                duration: 1 // Set animation duration to 0 to disable animation
             }
+        }
+    });
+
+
+    // Initialize the bar chart
+    const strongestSignalsBarChart = new Chart(strongestSignalsChart, {
+        type: 'bar',
+        data: {
+            labels: [], // Will contain SSIDs of nearest networks
+            datasets: [{
+                label: 'Signal Strength (0 highest, -100 lowest))',
+                data: [], // Will contain signal strength values
+                backgroundColor: 'blue', // Customize the bar color
+            }]
+        },
+        options: {
+            indexAxis: 'x', // Display bars on the bottom and go up based on signal strength
+            scales: {
+                y: {
+                   
+                    title: {
+                        display: true,
+                        text: 'Network SSID'
+                    }
+                },
+                x: {
+                    beginAtZero: true, // Display highest signal strength at the top
+                    title: {
+                        display: true,
+                        text: 'Signal Strength'
+                    }
+                }
+            },
+
+    
+        }
+    });
+
+    // Initialize the pie chart for encryption in range
+    const encryptionPieChartInRangeCanvas = document.getElementById('encryptionPieChartInRange');
+    const encryptionPieChartInRange = new Chart(encryptionPieChartInRangeCanvas, {
+        type: 'pie',
+        data: {
+            labels: ['WEP', 'WPA', 'WPA2', 'Unknown'],
+            datasets: [{
+                label: 'In Range',
+                data: [],
+                backgroundColor: ['red', 'blue', 'green', 'purple', 'gray'], // Customize the colors
+            }]
+        },
+        options: {
+            aspectRatio: 2, // Adjust this value to control the chart's aspect ratio
+            // Other options can be added here as needed
+        }
+    });
+
+    // Initialize the pie chart for total encryption
+    const encryptionPieChartTotalCanvas = document.getElementById('encryptionChartSaved');
+    const encryptionPieChartTotal = new Chart(encryptionPieChartTotalCanvas, {
+        type: 'pie',
+        data: {
+            labels: ['WEP', 'WPA', 'WPA2', 'Unknown'],
+            datasets: [{
+                label: 'In Total',
+                data: [],
+                backgroundColor: ['red', 'blue', 'green', 'purple', 'gray'], // Customize the colors
+            }]
+        },
+        options: {
+            aspectRatio: 2, // Adjust this value to control the chart's aspect ratio
+            // Other options can be added here as needed
         }
     });
 
@@ -152,57 +247,93 @@
             cpuUsageChartInstance.data.datasets[0].data.shift();
             cpuUsageChartInstance.data.labels.shift(); // Also shift corresponding label
         }
+
+
     }
 
     updateCharts();
-    setInterval(updateCharts, 2000);
+    setInterval(updateCharts, 1000);
 
 
-const encryptionChart = document.getElementById('encryptionChart').getContext('2d');
 
-// Initialize the pie chart
-const encryptionPieChart = new Chart(encryptionChart, {
-    type: 'pie',
-    data: {
-        labels: ['WEP', 'WPA', 'WPA2', 'WPA3', 'Unknown'],
-        datasets: [{
-            data: [],
-            backgroundColor: ['red', 'blue', 'green', 'purple', 'gray'], // Customize the colors
-        }]
-    },
-    options: {
-        aspectRatio: 1, // Adjust this value to control the chart's aspect ratio
-        // Other options can be added here as needed
-    }
-});
 
 // Function to fetch and update the encryption data for the pie chart
-async function updateEncryptionChart() {
+async function updateNetworkCharts() {
+
+
+
     const response = await fetch('/networks');
     const data = await response.json();
-    
+
+    // Update the pie chart data
     const wpaCount = data.WPA || 0;
     const wpa2Count = data.WPA2 || 0;
-    const wpa3Count = data.WPA3 || 0;
     const wepCount = data.WEP || 0;
     const unknownCount = data.unknownEnc || 0;
 
-    // Update chart data
-    encryptionPieChart.data.datasets[0].data = [wepCount, wpaCount, wpa2Count, wpa3Count, unknownCount];
-    encryptionPieChart.data.labels = [
+    // Update the pie chart data
+    const wpaCountSaved = data.savedWPA || 0;
+    const wpa2CountSaved = data.savedWPA2 || 0;
+    const wepCountSaved = data.savedWEP || 0;
+    const unknownCountSaved = data.unknownEnc || 0;
+
+
+    // Update pie chart data
+    encryptionPieChartInRange.data.datasets[0].data = [wepCount, wpaCount, wpa2Count, unknownCount];
+    encryptionPieChartInRange.data.labels = [
         `WEP (${wepCount})`,
         `WPA (${wpaCount})`,
         `WPA2 (${wpa2Count})`,
-        `WPA3 (${wpa3Count})`,
         `Unknown (${unknownCount})`
     ];
-    encryptionPieChart.update();
+    encryptionPieChartInRange.update();
+
+    // Update pie chart data
+    encryptionPieChartTotal.data.datasets[0].data = [wepCountSaved, wpaCountSaved, wpa2CountSaved, unknownCountSaved];
+    encryptionPieChartTotal.data.labels = [
+        `WEP (${wepCountSaved})`,
+        `WPA (${wpaCountSaved})`,
+        `WPA2 (${wpa2CountSaved})`,
+        `Unknown (${unknownCountSaved})`
+    ];
+    encryptionPieChartTotal.update();
+
+    // Update the content of HTML elements with the received data
+    document.getElementById('networkCount').innerText = `In Range: ${data.networkCount}`;
+    document.getElementById('totalNetworks').innerText = `Total Networks: ${data.savedNetworksCount}`;
+    document.getElementById('unknownNetworks').innerText = `Unknown: ${data.unknownEnc}`;
+    document.getElementById('wepNetworks').innerText = `WEP: ${data.WEP}`;
+    document.getElementById('wpaNetworks').innerText = `WPA: ${data.WPA}`;
+    document.getElementById('wpa2Networks').innerText = `WPA2: ${data.WPA2}`;
+
+
+    // Update the strongest signals bar chart data
+    const nearestNetworks = Object.values(data.networks) || [];
+    const sortedNetworks = nearestNetworks.sort((a, b) => b.signalStrength - a.signalStrength);
+    const limitedNetworks = sortedNetworks.slice(0, 10); // Limit to max 10 data points
+
+    const signalData = limitedNetworks.map(network => (showSSIDs ? network.signalStrength : 0));
+    const ssidData = limitedNetworks.map(network => '');
+
+    // Update chart data
+    strongestSignalsBarChart.data.labels = ssidData;
+    strongestSignalsBarChart.data.datasets[0].data = signalData;
+    strongestSignalsBarChart.update();
 }
 
 
 // Initial call to update the chart and set interval for updates
-updateEncryptionChart();
-setInterval(updateEncryptionChart, 5000); // Update every 5 seconds
+updateNetworkCharts();
+setInterval(updateNetworkCharts, 7000); // Update every 7 seconds
+
+
+let showSSIDs = true; // Initial state
+
+function toggleSSIDs() {
+    showSSIDs = !showSSIDs; // Toggle the state
+
+    updateNetworkCharts(); // Call the chart update function
+}
 
 
     </script>

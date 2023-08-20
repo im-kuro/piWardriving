@@ -34,9 +34,9 @@
 
 
 
-    <div class="container-fluid">
+    <div>
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark" style="padding: 0%; ">
+        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark" style="padding: 0%;">
             <div class="container-fluid">
                 <img src="Utils/static/Kuro2ToneRedNOBG.png" style="height: 95px; width: 95px">
                 <a class="navbar-brand" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Wardriving Tool</a>
@@ -55,6 +55,10 @@
                             <a class="nav-link" href="/output">Output</a>
                         </li>
                     </ul>
+                </div>
+                        <!-- Dark mode toggle button -->
+                <div class="d-flex justify-content-end mt-2" style="margin-right: 30px;">
+                    <button id="darkModeToggle" class="btn btn-secondary">Dark Mode</button>
                 </div>
                 <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
             </div>
@@ -135,7 +139,7 @@
         },
         options: {
             animation: {
-                duration: 0 // Set animation duration to 0 to disable animation
+                duration: 1 // Set animation duration to 0 to disable animation
             }
         }
     });
@@ -153,7 +157,7 @@
         },
         options: {
             animation: {
-                duration: 0 // Set animation duration to 0 to disable animation
+                duration: 1 // Set animation duration to 0 to disable animation
             }
         }
     });
@@ -283,7 +287,18 @@
 
     // Call the updateNetworkInfo function initially and then at intervals
     updateNetworkInfo();
-    setInterval(updateNetworkInfo, 10000); // Update every 5 seconds
+    setInterval(updateNetworkInfo, 7000); // Update every 7 seconds
+
+    // Dark mode toggle logic
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const body = document.body;
+    
+    darkModeToggle.addEventListener('click', () => {
+        console.log('Dark mode toggle clicked');
+        body.classList.toggle('dark-mode'); // Toggle the 'dark-mode' class
+    });
+
+
 
 </script>
 

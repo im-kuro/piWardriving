@@ -37,21 +37,22 @@ class toolkit():
 			print(f"Error fetching CPU usage: {e}")
 			return None
    
-	async def scan_wifi_networks(interface: int = 0):
+   
+	async def scan_wifi_networks(interface: int):
 		if interface is None:
 			print("!CRITICAL! No interface selected, please select one")
 			return None
 		iface = wifi.interfaces()[int(interface)]
 		iface.scan()
 		# give time for scanning
-		await asyncio.sleep(6)
+		await asyncio.sleep(5)
 		scan_results = iface.scan_results()
 
 		network_info = {}
 		for result in scan_results:
 			network_info[f"{result.ssid}"]={
-				"SSID": result.ssid,
-				"BSSID": result.bssid,
+				"ssid": result.ssid,
+				"bssid": result.bssid,
 				"signalStrength": result.signal,
 				"encryption": result.akm
 			}

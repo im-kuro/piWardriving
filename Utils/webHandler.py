@@ -116,9 +116,16 @@ async def getNetworks(request):
     unknown = 0
     WPANetworks = 0
     WPA2Networks = 0
-    WPA3Networks = 0
     WEPNetworks = 0
+    savedWPANetworks = 0
+    savedWPA2Networks = 0
+    savedWEPNetworks = 0
+    
+    
+    
     networkCount = 0
+    savedNetworksCount = 0
+    
     for network_info in networkRes.values():
         networkCount += 1
         encryption = network_info["encryption"]
@@ -131,21 +138,31 @@ async def getNetworks(request):
         
         if encryption_type == 4:
             WPA2Networks += 1
-        elif encryption_type == 5:
-            WPA3Networks += 1
         elif encryption_type == 2 or encryption_type == 3:
             WPANetworks += 1
         elif encryption_type == 1:
             WEPNetworks += 1
 
+    for network in savedNetworks:
+        savedNetworksCount += 1
+        if network["encryption"] == 4:
+            savedWPA2Networks += 1
+        elif network["encryption"] == 2 or network["encryption"] == 3:
+            savedWPANetworks += 1
+        elif network["encryption"] == 1:
+            savedWEPNetworks += 1
 
     return json({
         "networks": networkRes,
+        "savedNetworks": savedNetworks,
+        "savedNetworksCount": savedNetworksCount,
         "networkCount": networkCount,
         "WPA": WPANetworks,
         "WPA2": WPA2Networks,
-        "WPA3": WPA3Networks,
         "WEP": WEPNetworks,
+        "savedWPA": savedWPANetworks,
+        "savedWPA2": savedWPA2Networks,
+        "savedWEP": savedWEPNetworks,
         "unknownEnc": unknown
     })
 
