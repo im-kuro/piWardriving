@@ -116,7 +116,7 @@ async def getSaved(request):
 async def getNetworks(request):
     
     networkRes = await tools.toolkit.scan_wifi_networks(app.ctx.interface)
-    
+
     if networkRes is None:
         return json({"status": "error", "message": "No interface selected"})
     

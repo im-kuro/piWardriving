@@ -5,8 +5,7 @@
     <title>Wardriving Tool</title>
     <!-- Add Bootstrap CSS link -->
     <link rel="stylesheet" href="Utils/static/bootstrap-5.3.1-dist/css/bootstrap.min.css">
-    <!-- Add Chart.js -->
-    <script src="Utils/static/charts.js"></script>
+
 </head>
 
 <body>
@@ -55,7 +54,11 @@
                     </li>
                 </ul>
             </div>
-            <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >Using Interface: {{ deviceInfo["interfaceInfo"]["name"] }}</h5>
+                                <!-- Dark mode toggle button -->
+            <div class="d-flex justify-content-end mt-2" style="margin-right: 30px;">
+                <button id="darkModeToggle" class="btn btn-secondary">Dark Mode</button>
+            </div>
+            <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
         </div>
     </nav>
 
@@ -78,7 +81,7 @@
 
         <!-- Middle column - Networks Chart -->
         <div class="col-sm-12 col-lg-3 text-black p-4">
-            <h2>Networks Encryption</h2>
+            <h2>Networks Analytics</h2>
             <canvas id="encryptionPieChartInRange"></canvas>
             <canvas id="encryptionChartSaved"></canvas>
         </div>
@@ -125,307 +128,11 @@
     <!-- Add Bootstrap JS and Popper.js -->
     <script src="Utils/static/bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js"></script>
     <!-- Add Chart.js -->
-    <script  src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-    const MAX_DATA_POINTS = 20;
-    const temperatureChart = document.getElementById('temperatureChart').getContext('2d');
-    const cpuUsageChart = document.getElementById('cpuUsageChart').getContext('2d');
-        
-
-
-    const temperatureChartInstance = new Chart(temperatureChart, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Temperature',
-                data: [],
-                borderColor: 'red',
-                fill: false,
-                
-
-            }]
-        },
-        options: {
-            animation: {
-                duration: 1 // Set animation duration to 0 to disable animation
-            }
-        }
-    });
-
-    const cpuUsageChartInstance = new Chart(cpuUsageChart, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'CPU Usage',
-                data: [],
-                borderColor: 'blue',
-                fill: false,
-
-            }]
-        },
-        options: {
-            animation: {
-                duration: 1 // Set animation duration to 0 to disable animation
-            }
-        }
-    });
-
-
-    // Initialize the bar chart
-    const strongestSignalsBarChart = new Chart(strongestSignalsChart, {
-        type: 'bar',
-        data: {
-            labels: [], // Will contain SSIDs of nearest networks
-            datasets: [{
-                label: 'Signal Strength (0 highest, -100 lowest))',
-                data: [], // Will contain signal strength values
-                backgroundColor: 'blue', // Customize the bar color
-            }]
-        },
-        options: {
-            indexAxis: 'x', // Display bars on the bottom and go up based on signal strength
-            scales: {
-                y: {
-                   
-                    title: {
-                        display: true,
-                        text: 'Network SSID'
-                    }
-                },
-                x: {
-                    beginAtZero: true, // Display highest signal strength at the top
-                    title: {
-                        display: true,
-                        text: 'Signal Strength'
-                    }
-                }
-            },
-
-    
-        }
-    });
-
-    // Initialize the pie chart for encryption in range
-    const encryptionPieChartInRangeCanvas = document.getElementById('encryptionPieChartInRange');
-    const encryptionPieChartInRange = new Chart(encryptionPieChartInRangeCanvas, {
-        type: 'pie',
-        data: {
-            labels: ['WEP', 'WPA', 'WPA2', 'Unknown'],
-            datasets: [{
-                label: 'In Range',
-                data: [],
-                backgroundColor: ['red', 'blue', 'green', 'purple', 'gray'], // Customize the colors
-            }]
-        },
-        options: {
-            aspectRatio: 2, // Adjust this value to control the chart's aspect ratio
-            // Other options can be added here as needed
-        }
-    });
-
-    // Initialize the pie chart for total encryption
-    const encryptionPieChartTotalCanvas = document.getElementById('encryptionChartSaved');
-    const encryptionPieChartTotal = new Chart(encryptionPieChartTotalCanvas, {
-        type: 'pie',
-        data: {
-            labels: ['WEP', 'WPA', 'WPA2', 'Unknown'],
-            datasets: [{
-                label: 'In Total',
-                data: [],
-                backgroundColor: ['red', 'blue', 'green', 'purple', 'gray'], // Customize the colors
-            }]
-        },
-        options: {
-            aspectRatio: 2, // Adjust this value to control the chart's aspect ratio
-            // Other options can be added here as needed
-        }
-    });
-
-
-    async function updateCharts() {
-        const response = await fetch('/data');
-        const data = await response.json();
-        document.getElementById('temp').innerHTML = "CPU Temp: " + data.temperature;
-        document.getElementById('cpu').innerHTML = "CPU Usage: " + data.cpuUsage;
-
-        // Update temperature chart
-        temperatureChartInstance.data.labels.push(new Date().toLocaleTimeString());
-        temperatureChartInstance.data.datasets[0].data.push(data.temperature);
-        temperatureChartInstance.update();
-
-        // Update CPU usage chart
-        cpuUsageChartInstance.data.labels.push(new Date().toLocaleTimeString());
-        cpuUsageChartInstance.data.datasets[0].data.push(data.cpuUsage);
-        cpuUsageChartInstance.update();
-
-        // Limit the number of data points to the defined maximum
-        if (temperatureChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
-            temperatureChartInstance.data.datasets[0].data.shift();
-            temperatureChartInstance.data.labels.shift(); // Also shift corresponding label
-        }
-
-        if (cpuUsageChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
-            cpuUsageChartInstance.data.datasets[0].data.shift();
-            cpuUsageChartInstance.data.labels.shift(); // Also shift corresponding label
-        }
-
-
-    }
-
-    updateCharts();
-    setInterval(updateCharts, 1000);
+    <script src="Utils/static/charts.js"></script>
+    <script src="Utils/static/analytics.js"></script>
+    <script src="Utils/static/shared.js"></script>   
 
 
 
-
-// Function to fetch and update the encryption data for the pie chart
-async function updateNetworkCharts() {
-
-
-
-    const response = await fetch('/networks');
-    const data = await response.json();
-
-    // Update the pie chart data
-    const wpaCount = data.WPA || 0;
-    const wpa2Count = data.WPA2 || 0;
-    const wepCount = data.WEP || 0;
-    const unknownCount = data.unknownEnc || 0;
-
-    // Update the pie chart data
-    const wpaCountSaved = data.savedWPA || 0;
-    const wpa2CountSaved = data.savedWPA2 || 0;
-    const wepCountSaved = data.savedWEP || 0;
-    const unknownCountSaved = data.unknownEnc || 0;
-
-
-    // Update pie chart data
-    encryptionPieChartInRange.data.datasets[0].data = [wepCount, wpaCount, wpa2Count, unknownCount];
-    encryptionPieChartInRange.data.labels = [
-        `WEP (${wepCount})`,
-        `WPA (${wpaCount})`,
-        `WPA2 (${wpa2Count})`,
-        `Unknown (${unknownCount})`
-    ];
-    encryptionPieChartInRange.update();
-
-    // Update pie chart data
-    encryptionPieChartTotal.data.datasets[0].data = [wepCountSaved, wpaCountSaved, wpa2CountSaved, unknownCountSaved];
-    encryptionPieChartTotal.data.labels = [
-        `WEP (${wepCountSaved})`,
-        `WPA (${wpaCountSaved})`,
-        `WPA2 (${wpa2CountSaved})`,
-        `Unknown (${unknownCountSaved})`
-    ];
-    encryptionPieChartTotal.update();
-
-    // Update the content of HTML elements with the received data
-    document.getElementById('networkCount').innerText = `In Range: ${data.networkCount}`;
-    document.getElementById('totalNetworks').innerText = `Total Networks: ${data.savedNetworksCount}`;
-    document.getElementById('unknownNetworks').innerText = `Unknown: ${data.unknownEnc}`;
-    document.getElementById('wepNetworks').innerText = `WEP: ${data.WEP}`;
-    document.getElementById('wpaNetworks').innerText = `WPA: ${data.WPA}`;
-    document.getElementById('wpa2Networks').innerText = `WPA2: ${data.WPA2}`;
-    document.getElementById('unknownNetworksSaved').innerText = `Unknown: ${data.unknownSaved}`;
-    document.getElementById('wepNetworksSaved').innerText = `WEP: ${data.savedWEP}`;
-    document.getElementById('wpaNetworksSaved').innerText = `WPA: ${data.savedWPA}`;
-    document.getElementById('wpa2NetworksSaved').innerText = `WPA2: ${data.savedWPA2}`;
-
-    // Update the strongest signals bar chart data
-    const nearestNetworks = Object.values(data.networks) || [];
-    const sortedNetworks = nearestNetworks.sort((a, b) => b.signalStrength - a.signalStrength);
-    const limitedNetworks = sortedNetworks.slice(0, 10); // Limit to max 10 data points
-
-    const signalData = limitedNetworks.map(network => (showSSIDs ? network.signalStrength : 0));
-    const ssidData = limitedNetworks.map(network => (showSSIDs ? network.ssid : '')); // Update this line
-
-
-    // Update chart data
-    strongestSignalsBarChart.data.labels = ssidData;
-    strongestSignalsBarChart.data.datasets[0].data = signalData;
-    strongestSignalsBarChart.update();
-}
-
-
-// Initial call to update the chart and set interval for updates
-updateNetworkCharts();
-setInterval(updateNetworkCharts, 7000); // Update every 7 seconds
-
-
-let showSSIDs = true; // Initial state
-
-function toggleSSIDs() {
-    showSSIDs = !showSSIDs; // Toggle the state
-
-    updateNetworkCharts(); // Call the chart update function
-}
-
-
-function toggleSSIDs() {
-    showSSIDs = !showSSIDs; // Toggle the state
-    // Check if the container element exists before trying to access its style
-    const container = document.getElementById('strongestSignalsContainer');
-    
-
-    if (showSSIDs) {
-        document.getElementById('toggleSSIDsBtn').innerText = 'Hide SSIDs';
-    } else {
-        document.getElementById('toggleSSIDsBtn').innerText = 'Show SSIDs';
-    }
-    updateNetworkCharts(); // Call the chart update function
-}
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
-    const interfaceForm = document.getElementById('interfaceForm');
-    const interfaceSelect = document.getElementById('interfaceSelect');
-    const selectedInterfaceLabel = document.getElementById('selectedInterface');
-    // Check if an interface is already chosen
-    const currentInterface = selectedInterfaceLabel.getAttribute('value'); // Use getAttribute to get the value | Return None if not set
-    console.log(currentInterface);
-    if (currentInterface == "None") {
-        // If no interface is chosen, show the modal
-        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
-        interfaceModal.show();
-        // Add submit event listener to the form
-        interfaceForm.addEventListener('submit', function (event) {
-            event.preventDefault(); // Prevent default form submission
-            const selectedInterfaceIdx = interfaceSelect.value;
-            const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
-            // Create JSON payload
-            const payload = {
-                interfaceIdx: selectedInterfaceIdx,
-                interfaceName: selectedInterfaceName
-            };
-            // Make API call using fetch
-            fetch('/setInterface', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Handle API response if needed
-                console.log(data);
-                // Close the modal after submitting
-                interfaceModal.hide();
-                selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceName}`;
-            })
-            .catch(error => {
-                // Handle error if needed
-                console.error('Error:', error);
-            });
-        });
-    } else {
-        // If an interface is already chosen, update the label
-        selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceLabel.textContent}`;
-    }
-    });
-    </script>
 </body>
 </html>

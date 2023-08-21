@@ -23,7 +23,7 @@ class IOFuncs:
     
 class database:
 	def __init__(self) -> None:
-		self.path = "Utils/database/session.json"
+		self.path = "Utils/session.json"
   
 	def writeToDB(self, objPath: str, jsonData) -> bool:
 		if objPath is None:
