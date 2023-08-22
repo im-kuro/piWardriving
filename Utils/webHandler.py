@@ -112,7 +112,7 @@ async def setSettings(request):
 
 
 
-@app.route('/getSettings', methods=["GET"])
+@app.route('/getsettings', methods=["GET"])
 async def getSettings(request):
     try:
         return json({"status": "success", "settings": helpers.database().readFromDB("settings")})

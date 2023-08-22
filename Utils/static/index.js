@@ -10,14 +10,14 @@ const netInfoDiv = document.getElementById('netInfoDiv');
 async function updateDarkModeStyles() {
     try {
         // Make API call to check if dark mode is enabled
-        const response = await fetch('/getSettings', {
+        const response = await fetch('/getsettings', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             },
         });
         const data = await response.json();
-        console.log('Dark mode API response:', data);
+        ;
 
         // Update body style and class based on dark mode status
         if (data.settings.darkmode) {
@@ -46,7 +46,7 @@ darkModeToggle.addEventListener('click', async () => {
     try {
         console.log('Dark mode toggle clicked');
         // Get current dark mode status
-        const isDarkMode = body.classList.contains('dark-mode');
+        const isDarkMode = body.classList.contains('bg-secondary');
 
         // Prepare payload for API call
         const darkModePayload = {
@@ -55,7 +55,7 @@ darkModeToggle.addEventListener('click', async () => {
         };
 
         // Make API call to set dark mode status
-        const setSettingsResponse = await fetch('/setSettings', {
+        const setSettingsResponse = await fetch('/setsettings', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -63,8 +63,7 @@ darkModeToggle.addEventListener('click', async () => {
             body: JSON.stringify(darkModePayload)
         });
         const setData = await setSettingsResponse.json();
-        console.log('Dark mode set response:', setData);
-
+        
         // Update styles after toggling
         updateDarkModeStyles();
     } catch (error) {

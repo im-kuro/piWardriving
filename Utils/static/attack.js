@@ -46,9 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-
-
-// JavaScript code for dynamic population of interface options and form submission
+// code for dynamic population of interface options and form submission
 document.addEventListener('DOMContentLoaded', function () {
     // Populate the interface selection dropdown based on data
     const interfaceSelect = document.getElementById('interfaceSelect');
@@ -56,37 +54,54 @@ document.addEventListener('DOMContentLoaded', function () {
     // Handle form submission
     const attackSetupForm = document.getElementById('attackSetupForm');
     const startAttackBtn = document.getElementById('startAttackBtn');
+    let isWarDrivingStarted = false; // Track the war driving state
     
     attackSetupForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const interfaceValue = interfaceSelect.value;
+        const interfaceValue = interfaceSelect.value; // This line is mentioned in the error
         const selectedAction = document.querySelector('input[name="attackAction"]:checked').value;
         
-        // Perform AJAX request to start war driving
+        // Perform AJAX request to start or stop war driving
         try {
             startAttackBtn.disabled = true;
-            startAttackBtn.textContent = 'Starting...';
-            const response = await fetch('/startwardriving', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    interface: interfaceValue,
-                    action: selectedAction
-                })
-            });
-            
-            if (response.ok) {
-                startAttackBtn.textContent = 'War Driving Started';
-                startAttackBtn.classList.remove('btn-primary');
-                startAttackBtn.classList.add('btn-danger');
+            if (!isWarDrivingStarted) {
+                startAttackBtn.textContent = 'Starting...';
+                const response = await fetch('/startwardriving', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        interface: interfaceValue,
+                        action: selectedAction
+                    })
+                });
+                
+                if (response.ok) {
+                    startAttackBtn.textContent = 'War Driving Started';
+                    startAttackBtn.classList.remove('btn-primary');
+                    startAttackBtn.classList.add('btn-danger');
+                    isWarDrivingStarted = true; // Update the war driving state
+                } else {
+                    startAttackBtn.textContent = 'Error Starting War Driving';
+                }
             } else {
-                startAttackBtn.textContent = 'Error Starting War Driving';
+                startAttackBtn.textContent = 'Stopping...';
+                // Perform AJAX request to stop war driving
+                // Modify the fetch request accordingly
+                
+                if (response.ok) {
+                    startAttackBtn.textContent = 'Start War Driving';
+                    startAttackBtn.classList.remove('btn-danger');
+                    startAttackBtn.classList.add('btn-primary');
+                    isWarDrivingStarted = false; // Update the war driving state
+                } else {
+                    startAttackBtn.textContent = 'Error Stopping War Driving';
+                }
             }
         } catch (error) {
-            console.error('Error starting war driving:', error);
-            startAttackBtn.textContent = 'Error Starting War Driving';
+            console.error('Error:', error);
+            startAttackBtn.textContent = 'Error';
         }
         
         startAttackBtn.disabled = false;
@@ -98,14 +113,13 @@ document.addEventListener('DOMContentLoaded', function () {
 // Dark mode toggle logic
 const darkModeToggle = document.getElementById('darkModeToggle');
 const body = document.body;
-const deviceInfoDiv = document.getElementById('deviceInfoDiv');
-const chartsDiv = document.getElementById('chartsDiv');
-const netInfoDiv = document.getElementById('netInfoDiv');
+const attackOptions = document.getElementById('attackSetupDiv');
+const filterOptionsDiv = document.getElementById('filterOptionsDiv');
 // Function to update dark mode styles based on API response
 async function updateDarkModeStyles() {
     try {
         // Make API call to check if dark mode is enabled
-        const response = await fetch('/getSettings', {
+        const response = await fetch('/getsettings', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -117,17 +131,18 @@ async function updateDarkModeStyles() {
         // Update body style and class based on dark mode status
         if (data.settings.darkmode) {
             body.classList.add('bg-secondary');
-            deviceInfoDiv.classList.add('bg-secondary');
-            body.classList.add('dark-mode');
-            chartsDiv.classList.add('text-white')
-            netInfoDiv.classList.add('bg-secondary');
-
+            body.classList.add('text-white');
+            attackOptions.classList.add('bg-secondary');
+            attackOptions.classList.add('text-white');
+            filterOptionsDiv.classList.add('bg-secondary');
+            filterOptionsDiv.classList.add('text-white');
         } else {
-            deviceInfoDiv.classList.remove('bg-secondary');
             body.classList.remove('bg-secondary');
-            body.classList.remove('dark-mode');
-            chartsDiv.classList.remove('text-white')
-            netInfoDiv.classList.add('bg-secondary  ');
+            body.classList.remove('text-white');
+            attackOptions.classList.remove('bg-secondary');
+            attackOptions.classList.remove('text-white');
+            filterOptionsDiv.classList.remove('bg-secondary');
+            filterOptionsDiv.classList.remove('text-white');
         }
     } catch (error) {
         console.error('Error updating dark mode styles:', error);
@@ -138,7 +153,7 @@ darkModeToggle.addEventListener('click', async () => {
     try {
         console.log('Dark mode toggle clicked');
         // Get current dark mode status
-        const isDarkMode = body.classList.contains('dark-mode');
+        const isDarkMode = body.classList.contains('bg-secondary');
 
         // Prepare payload for API call
         const darkModePayload = {
@@ -147,7 +162,7 @@ darkModeToggle.addEventListener('click', async () => {
         };
 
         // Make API call to set dark mode status
-        const setSettingsResponse = await fetch('/setSettings', {
+        const setSettingsResponse = await fetch('/setsettings', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

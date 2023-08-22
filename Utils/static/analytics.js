@@ -7,7 +7,7 @@ var darkmodeValue = false;
 async function updateDarkModeStyles() {
     try {
         // Make API call to check if dark mode is enabled
-        const response = await fetch('/getSettings', {
+        const response = await fetch('/getsettings', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -50,7 +50,7 @@ darkModeToggle.addEventListener('click', async () => {
         };
 
         // Make API call to set dark mode status
-        const setSettingsResponse = await fetch('/setSettings', {
+        const setSettingsResponse = await fetch('/setsettings', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
