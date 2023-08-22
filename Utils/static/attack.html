@@ -12,7 +12,7 @@
             <div class="modal-content">
                 <form id="interfaceForm">
                     <div class="modal-header">
-                        <h5 class="modal-title">Select Interface</h5>
+                        <h3 class="modal-title">Select Interface</h3>
                     </div>
                     <div class="modal-body">
                         <p>Please select the interface you want to use:</p>
@@ -57,25 +57,29 @@
 
                     </ul>
                 </div>
-
+                <div class="d-flex justify-content-end mt-2" style="margin-right: 30px;">
+                    <button id="darkModeToggle" class="btn btn-secondary">Dark Mode</button>
+                </div>
                 <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
             </div>
         </nav>
     </div>
+
     <div class="row">
-    <div class="row">
-        <div class="col-sm-6 offset-sm-3">
+        <div class="col-sm-6" class="main">
             <!-- Attack setup panel -->
-            <div class="card mt-4">
+            <div class="card lg-4 p-4">
                 <div class="card-header">
                     <h4>Attack Setup</h4>
                 </div>
-                <div class="card-body">
+                <div class="">
                     <form id="attackSetupForm">
                         <div class="mb-3">
                             <label for="interfaceSelect" class="form-label">Select Interface</label>
                             <select class="form-select" id="interfaceSelect" aria-label="Select Interface">
-                                <!-- Options will be dynamically populated using JavaScript -->
+                                {% for interface_name, interface_data in deviceInfo.interfaces.items() %}
+                                    <option value="{{ interface_data.idx }}">{{ interface_data.interfaceName }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="mb-4">
@@ -83,6 +87,7 @@
 							<div class="form-check">
                                 <input class="form-check-input" type="radio" name="attackAction" id="monitorOnly" value="monitorOnly">
                                 <label class="form-check-label" for="monitorOnly">Monitor Only</label>
+                            </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="attackAction" id="logNetworks" value="logNetworks">
                                 <label class="form-check-label" for="logNetworks">Log Networks</label>
@@ -91,15 +96,68 @@
                                 <input class="form-check-input" type="radio" name="attackAction" id="captureHandshakes" value="captureHandshakes">
                                 <label class="form-check-label" for="captureHandshakes">Capture Handshakes</label>
                             </div>
-
+                        
                         </div>
                         <button type="submit" class="btn btn-primary" id="startAttackBtn">Start War Driving</button>
                     </form>
                 </div>
             </div>
         </div>
-    </div>
-    
+        <!-- Filter options panel -->
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Filter Options</h4>
+                </div>
+                <div class="card-body col-lg-12 p-4">
+                    <div class="row">
+                        <!-- SCAN OPTIONS -->
+                        <div class="col-lg-6">
+                            <h5>SCAN OPTIONS</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="filterWEP">
+                                <label class="form-check-label" for="filterWEP">Only show WEP</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="filterWPA">
+                                <label class="form-check-label" for="filterWPA">Only show WPA</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="filterWPA2">
+                                <label class="form-check-label" for="filterWPA2">Only show WPA2</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="filterUnknown">
+                                <label class="form-check-label" for="filterUnknown">Don't Show Unknown</label>
+                            </div>
+                            <div class="form-group p-2">
+                                <label for="signalStrengthFilter">Filter by Signal Strength:</label>
+                                <input type="range" class="form-range" id="signalStrengthFilter" min="1" max="100">
+                            </div>
+                        </div>
+                        
+                        <!-- ALERT OPTIONS -->
+                        <div class="col-lg-6">
+                            <h5>ALERT OPTIONS</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="alertWEP">
+                                <label class="form-check-label" for="alertWEP">Alert on WEP Find</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="alertWPA">
+                                <label class="form-check-label" for="alertWPA">Alert on WPA Find</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="alertWPA2">
+                                <label class="form-check-label" for="alertWPA2">Alert on WPA2 Find</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
     <!-- Add Bootstrap JS and Popper.js -->
     <script src="Utils/static/bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js"></script>
     <!-- Add Chart.js -->

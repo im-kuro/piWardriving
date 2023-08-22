@@ -26,10 +26,10 @@ python run.py
 
 
 ## Todo
-- [x] finish analytics page
-- [x] finish output page
-- [x] finish settings option
-- [x] Switch backend to socketIO
+- [x] clean up analytics page
+- [x] finish attack page
+- [x] finish settings options
+- [x] Add deticated page for attacking a specific AP
 
 
 

@@ -23,7 +23,7 @@ class IOFuncs:
     
 class database:
 	def __init__(self) -> None:
-		self.path = "Utils/session.json"
+		self.path = "Utils/database/session.json"
   
 	def writeToDB(self, objPath: str, jsonData) -> bool:
 		DB = json.loads(open(self.path).read())
@@ -50,7 +50,15 @@ class database:
 				                "idx": None,
 				                "name": None
 				            },
-				            "darkmode": False
+				            "darkmode": False,
+							"onlShowWEP": False,
+							"onlyShowWPA": False,
+							"onlyShowWPA2": False,
+							"dontShowUnknown": False,
+							"alertOnWEP": False,
+							"alertOnWPA": False,
+							"alertOnWPA2": False,
+							"filterBySignal": False,
 				        }
 				    },
 				    file, indent=4  # You can adjust the indentation as needed

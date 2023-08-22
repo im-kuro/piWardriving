@@ -97,7 +97,15 @@ async def setSettings(request):
             # Update the "darkmode" setting in the database
             settings["darkmode"] = settingPayload
             helpers.database().writeToDB("settings", settings)
-            return json({"status": "success", "message": "Darkmode set to " + str(settingPayload)})
+            return json({"status": "success", "message": f"Darkmode set to {settingPayload}"})
+        
+        if settingCall == "setoption":
+            settings = helpers.database().readFromDB("settings")
+            # Update the option setting in the database
+            settings[str(settingPayload["option"])] = settingPayload["value"]
+            helpers.database().writeToDB("settings", settings)
+            return json({"status": "success", "message": f"{settingPayload['option']} set to {settingPayload['value']}"})
+        
     except Exception as e:
         return json({"status": "error", "message": str(e)})
 

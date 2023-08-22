@@ -86,7 +86,7 @@ async function updateCharts() {
 
 
 updateCharts();
-setInterval(updateCharts, 2000);
+setInterval(updateCharts, 1000);
 
 
 
@@ -112,7 +112,7 @@ async function updateNetworkCharts() {
 
 // Initial call to update the chart and set interval for updates
 updateNetworkCharts();
-setInterval(updateNetworkCharts, 7000); // Update every 7 seconds
+setInterval(updateNetworkCharts, 6000); // Update every 6 seconds
 
 
 

@@ -5,6 +5,14 @@
             "idx": null,
             "name": null
         },
-        "darkmode": false
+        "darkmode": false,
+        "onlShowWEP": false,
+        "onlyShowWPA": false,
+        "onlyShowWPA2": false,
+        "dontShowUnknown": false,
+        "alertOnWEP": false,
+        "alertOnWPA": false,
+        "alertOnWPA2": false,
+        "filterBySignal": false
     }
 }
