@@ -112,7 +112,7 @@ async function updateDarkModeStyles() {
             },
         });
         const data = await response.json();
-        console.log('Dark mode API response:', data);
+       
 
         // Update body style and class based on dark mode status
         if (data.settings.darkmode) {
@@ -155,7 +155,7 @@ darkModeToggle.addEventListener('click', async () => {
             body: JSON.stringify(darkModePayload)
         });
         const setData = await setSettingsResponse.json();
-        console.log('Dark mode set response:', setData);
+     
 
         // Update styles after toggling
         updateDarkModeStyles();
@@ -166,62 +166,51 @@ darkModeToggle.addEventListener('click', async () => {
 
 
 
- // Get references to the form elements
- const filterWEP = document.getElementById('filterWEP');
- const filterWPA = document.getElementById('filterWPA');
- const filterWPA2 = document.getElementById('filterWPA2');
- const filterUnknown = document.getElementById('filterUnknown');
- const signalStrengthFilter = document.getElementById('signalStrengthFilter');
- const alertWEP = document.getElementById('alertWEP');
- const alertWPA = document.getElementById('alertWPA');
- const alertWPA2 = document.getElementById('alertWPA2');
+// Get references to the form elements
+const filterWEP = document.getElementById('filterWEP');
+const filterWPA = document.getElementById('filterWPA');
+const filterWPA2 = document.getElementById('filterWPA2');
+const filterUnknown = document.getElementById('filterUnknown');
+const signalStrengthFilter = document.getElementById('signalStrengthFilter');
+const alertWEP = document.getElementById('alertWEP');
+const alertWPA = document.getElementById('alertWPA');
+const alertWPA2 = document.getElementById('alertWPA2');
 
- // Event listeners for checkboxes and range input
- filterWEP.addEventListener('change', updateFilters);
- filterWPA.addEventListener('change', updateFilters);
- filterWPA2.addEventListener('change', updateFilters);
- filterUnknown.addEventListener('change', updateFilters);
- signalStrengthFilter.addEventListener('input', updateFilters);
- alertWEP.addEventListener('change', updateAlerts);
- alertWPA.addEventListener('change', updateAlerts);
- alertWPA2.addEventListener('change', updateAlerts);
-
- // Function to update filters
- function updateFilters() {
-     // Use the selected values to filter data or perform actions
-     const showWEP = filterWEP.checked;
-     const showWPA = filterWPA.checked;
-     const showWPA2 = filterWPA2.checked;
-     const showUnknown = !filterUnknown.checked;
-     const signalStrength = signalStrengthFilter.value;
-
-     // You can perform actions based on these values, such as updating a chart or list
-     console.log('Filter Options:');
-     console.log('Show WEP:', showWEP);
-     console.log('Show WPA:', showWPA);
-     console.log('Show WPA2:', showWPA2);
-     console.log('Show Unknown:', showUnknown);
-     console.log('Signal Strength:', signalStrength);
- }
-
- // Function to update alerts
- function updateAlerts() {
-     // Use the selected values to trigger alerts or actions
-     const alertOnWEP = alertWEP.checked;
-     const alertOnWPA = alertWPA.checked;
-     const alertOnWPA2 = alertWPA2.checked;
-
-     // You can trigger alerts or actions based on these values
-     console.log('Alert Options:');
-     console.log('Alert on WEP Find:', alertOnWEP);
-     console.log('Alert on WPA Find:', alertOnWPA);
-     console.log('Alert on WPA2 Find:', alertOnWPA2);
- }
+signalStrengthFilter.addEventListener('input', updateSignalStrength);
 
 
 
 
-[filterWEP, filterWPA, filterWPA2, filterUnknown, signalStrengthFilter, alertWEP, alertWPA, alertWPA2].forEach(element => {
+// Function to update signal strength filter
+async function updateSignalStrength() {
+    const signalStrength = parseInt(signalStrengthFilter.value, 10);
+    try {
+        // Prepare payload for API call
+        const optionPayload = {
+            call: 'setoption',
+            payload: {
+                option: "signalStrengthFilter",
+                value: signalStrength
+            }
+        };
+
+        // Make API call to set option status
+        const setSettingsResponse = await fetch('/setsettings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(optionPayload)
+        });
+        const setData = await setSettingsResponse.json();
+
+    } catch (error) {
+        console.error('Error setting option:', error);
+    }
+}
+
+
+[filterWEP, filterWPA, filterWPA2, filterUnknown, alertWEP, alertWPA, alertWPA2].forEach(element => {
     element.addEventListener('change', async () => {
         try {
             const optionId = element.id;
@@ -237,7 +226,7 @@ darkModeToggle.addEventListener('click', async () => {
             };
 
             // Make API call to set option status
-            const setSettingsResponse = await fetch('/setSettings', {
+            const setSettingsResponse = await fetch('/setsettings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -245,7 +234,7 @@ darkModeToggle.addEventListener('click', async () => {
                 body: JSON.stringify(optionPayload)
             });
             const setData = await setSettingsResponse.json();
-            console.log('Option set response:', setData);
+            
         } catch (error) {
             console.error('Error setting option:', error);
         }

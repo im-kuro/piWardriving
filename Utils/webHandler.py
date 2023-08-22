@@ -87,10 +87,11 @@ async def setInterface(request):
 
 
 
-@app.route('/setSettings', methods=["POST"])
+@app.route('/setsettings', methods=["POST"])
 async def setSettings(request):
     settingCall = request.json.get("call")  # Use .get() to safely get the value
     settingPayload = request.json.get("payload")
+
     try:
         if settingCall == "darkmode":
             settings = helpers.database().readFromDB("settings")
