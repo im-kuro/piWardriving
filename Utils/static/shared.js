@@ -20,6 +20,13 @@ const temperatureChartInstance = new Chart(temperatureChart, {
     options: {
         animation: {
             duration: 1 // Set animation duration to 0 to disable animation
+        },
+        plugins: {
+            legend: {
+                labels: {
+                    color: "lightgrey", // Set legend text color
+                }
+            }
         }
     }
 });
@@ -37,48 +44,19 @@ const cpuUsageChartInstance = new Chart(cpuUsageChart, {
     options: {
         animation: {
             duration: 1 // Set animation duration to 0 to disable animation
+        },
+        plugins: {
+            legend: {
+                labels: {
+                    color: "lightgrey", // Set legend text color
+                }
+            }
         }
     }
 
 });
 
 
-// Dark mode toggle logic
-const darkModeToggle = document.getElementById('darkModeToggle');
-const body = document.body;
-
-darkModeToggle.addEventListener('click', async () => {
-    console.log('Dark mode toggle clicked');
-    // Get current dark mode status
-    const isDarkMode = body.classList.contains('dark-mode');
-    // Update body style and class based on dark mode status
-    if (!isDarkMode) {
-        body.style.backgroundColor = 'grey';
-        body.classList.add('dark-mode');
-    } else {
-        body.style.backgroundColor = '';
-        body.classList.remove('dark-mode');
-    }
-    // Prepare payload for API call
-    const darkModePayload = {
-        call: 'darkmode',
-        payload: !isDarkMode
-    };
-    // Make API call to set dark mode status
-    try {
-        const response = await fetch('/setSettings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(darkModePayload)
-        });
-        const data = await response.json();
-        console.log('Dark mode API response:', data);
-    } catch (error) {
-        console.error('Error setting dark mode:', error);
-    }
-});
 
 
 
@@ -105,12 +83,36 @@ async function updateCharts() {
         cpuUsageChartInstance.data.labels.shift(); // Also shift corresponding label
     }
 }
+
+
 updateCharts();
 setInterval(updateCharts, 2000);
 
 
 
+// Function to fetch and update the encryption data for the pie chart
+async function updateNetworkCharts() {
+    
+    const response = await fetch('/networks');
+    const data = await response.json();
 
+    // Update the content of HTML elements with the received data
+    document.getElementById('networkCount').innerText = `In Range: ${data.networkCount}`;
+    document.getElementById('totalNetworks').innerText = `Total Networks: ${data.savedNetworksCount}`;
+    document.getElementById('unknownNetworks').innerText = `Unknown: ${data.unknownEnc}`;
+    document.getElementById('wepNetworks').innerText = `WEP: ${data.WEP}`;
+    document.getElementById('wpaNetworks').innerText = `WPA: ${data.WPA}`;
+    document.getElementById('wpa2Networks').innerText = `WPA2: ${data.WPA2}`;
+    document.getElementById('unknownNetworksSaved').innerText = `Unknown: ${data.unknownSaved}`;
+    document.getElementById('wepNetworksSaved').innerText = `WEP: ${data.savedWEP}`;
+    document.getElementById('wpaNetworksSaved').innerText = `WPA: ${data.savedWPA}`;
+    document.getElementById('wpa2NetworksSaved').innerText = `WPA2: ${data.savedWPA2}`;
+
+}
+
+// Initial call to update the chart and set interval for updates
+updateNetworkCharts();
+setInterval(updateNetworkCharts, 7000); // Update every 7 seconds
 
 
 

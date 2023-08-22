@@ -26,16 +26,19 @@ class database:
 		self.path = "Utils/session.json"
   
 	def writeToDB(self, objPath: str, jsonData) -> bool:
-		if objPath is None:
-			DB = json.loads(open(self.path).read())[objPath] = {"settings": {}, "interfaceInfo": {}}
-		else:
-			DB = json.loads(open(self.path).read())
-			DB[objPath] = jsonData
+		DB = json.loads(open(self.path).read())
+		DB[objPath] = jsonData
 		json.dump(DB, open(self.path, "w"))
   
 	def readFromDB(self, objPath: str) -> dict:
-		return json.loads(open(self.path).read())[objPath]
-
+		if objPath is None:
+			return json.loads(open(self.path).read())
+		else:
+			return json.loads(open(self.path).read())[objPath]
+			
+   
+   
+   
 	def __initDatabase__(self):
 		try:
 			with open(self.path, 'w') as file:

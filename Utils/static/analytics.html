@@ -47,69 +47,97 @@
                         <a class="nav-link" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/analytics" style="font-weight: 1000;">Analytics</a>
+                        <a class="nav-link" href="/attack">Attack</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/output">Output</a>
+                        <a class="nav-link" href="/analytics" style="font-weight: 1000;">Analytics</a>
                     </li>
+
                 </ul>
             </div>
-                                <!-- Dark mode toggle button -->
+                         
+            <!-- Dark mode toggle button -->
             <div class="d-flex justify-content-end mt-2" style="margin-right: 30px;">
                 <button id="darkModeToggle" class="btn btn-secondary">Dark Mode</button>
             </div>
+
             <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
         </div>
     </nav>
 
     <div class="container-fluid">
-    <div class="row">
-        <!-- Left half column - Device Analytics -->
-        <div class="col-sm-12 col-lg-3 text-black p-4">
-            <h2>Device Analytics</h2>
-            <!-- Temperature Chart -->
-            <div class="col-12">
-                <canvas id="temperatureChart"></canvas>
-                <h5 id="temp">CPU Temp: </h5>
+        <div class="row" id="topDiv">
+            <!-- Left half column - Device Analytics -->
+            <div class="col-sm-12 col-lg-3 p-4">
+                <h2>Device Analytics</h2>
+                <!-- Temperature Chart -->
+                <div class="col-12">
+                    <canvas id="temperatureChart"></canvas>
+                    <h5 id="temp">CPU Temp: </h5>
+                </div>
+                <!-- CPU Usage Chart -->
+                <div class="col-12">
+                    <canvas id="cpuUsageChart"></canvas>
+                    <h5 id="cpu">CPU Usage: </h5>
+                </div>
             </div>
-            <!-- CPU Usage Chart -->
-            <div class="col-12">
-                <canvas id="cpuUsageChart"></canvas>
-                <h5 id="cpu">CPU Usage: </h5>
+
+            <!-- Middle column - Networks Chart -->
+            <div class="col-sm-12 col-lg-2  p-4">
+                <h2>Networks Analytics</h2>
+                <canvas id="encryptionPieChartInRange"></canvas>
+                <canvas id="encryptionChartSaved"></canvas>
             </div>
+
+            <!-- Right column - Network Info -->
+            <div class="col-sm-12 col-lg-7 p-4">
+                <div class="row">
+                    <div class="col-sm-8 col-lg-4 p-4">            
+                        <h2>Networks Info</h2>
+                        <h4 id="networkCount">In Range: </h4>
+                        <h4 id="totalNetworks">Total Found: </h4>
+                        <br>
+                        <h4 id="upload">Upload: </h4>
+                        <h4 id="download">Download: </h4>
+                    </div>
+                    <div class="col-sm-4 col-lg-4 p-4">
+                        <h2>In Range</h2>
+                        <h4 id="unknownNetworks">Unknown:</h4>
+                        <h4 id="wepNetworks">WEP:</h4>
+                        <h4 id="wpaNetworks">WPA:</h4>
+                        <h4 id="wpa2Networks">WPA2:</h4>
+                    </div>
+                    <div class="col-sm-4 col-lg-4 p-4">
+                        <h2>Total Count</h2>
+                        <h4 id="unknownNetworksSaved">Unknown:</h4>
+                        <h4 id="wepNetworksSaved">Total WEP:</h4>
+                        <h4 id="wpaNetworksSaved">Total WPA:</h4>
+                        <h4 id="wpa2NetworksSaved">Total WPA2:</h4>
+                    </div>
+
+                </div>
+
+            
+            <div class="row">
+                <div class="col-sm-12 col-lg-6  p-4">
+                    <h3>Strongest Signals    <button id="toggleSSIDsBtn" onclick="toggleSSIDs()" class="btn bg-primary-subtle">Show SSIDs</button></h3>
+
+                    <canvas id="strongestSignalsChart"></canvas>
+                </div>
+                <div class="col-sm-12 col-lg-6  p-4">
+                    <h3>Upload & Download</h3>
+                    <canvas id="uploadanddownload"></canvas>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Middle column - Networks Chart -->
-        <div class="col-sm-12 col-lg-3 text-black p-4">
-            <h2>Networks Analytics</h2>
-            <canvas id="encryptionPieChartInRange"></canvas>
-            <canvas id="encryptionChartSaved"></canvas>
+
+
+
+
         </div>
 
-        <!-- Right column - Network Info -->
-        <div class="col-sm-12 col-lg-2 text-black p-4">
-            <h2>Networks Info</h2>
-            <h4 id="networkCount">In Range: </h4>
-            <h4 id="totalNetworks">Total Found: </h4>
-            <h3>In Range</h3>
-            <h4 id="unknownNetworks">Unknown:</h4>
-            <h4 id="wepNetworks">WEP:</h4>
-            <h4 id="wpaNetworks">WPA:</h4>
-            <h4 id="wpa2Networks">WPA2:</h4>
-            <h3>Total Count</h3>
-            <h4 id="unknownNetworksSaved">Unknown:</h4>
-            <h4 id="wepNetworksSaved">Total WEP:</h4>
-            <h4 id="wpaNetworksSaved">Total WPA:</h4>
-            <h4 id="wpa2NetworksSaved">Total WPA2:</h4>
-        </div>
-
-        <!-- Middle column - Strongest Signals Bar Chart -->
-        <div class="col-sm-12 col-lg-4 text-black p-4">
-            <h2>Strongest Signals</h2>
-            <button id="toggleSSIDsBtn" onclick="toggleSSIDs()" class="btn bg-primary-subtle">Hide SSIDs</button>
-
-            <canvas id="strongestSignalsChart"></canvas>
-        </div>
 
         <div class="row">
             <!-- Bottom left column - Additional Info -->

@@ -36,7 +36,7 @@
 
     <div>
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark">
+        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark" style="padding: 0%;">
             <div class="container-fluid">
                 <img src="Utils/static/Kuro2ToneRedNOBG.png" style="height: 95px; width: 95px">
                 <a class="navbar-brand" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Wardriving Tool</a>
@@ -46,10 +46,10 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item active">
-                            <a class="nav-link" href="/" style="font-weight: 1000;">Home</a>
+                            <a class="nav-link" href="/">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/attack">Attack</a>
+                            <a class="nav-link" href="/attack" style="font-weight: 1000;">Attack</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/analytics">Analytics</a>
@@ -57,73 +57,45 @@
 
                     </ul>
                 </div>
-                        <!-- Dark mode toggle button -->
-                <div class="d-flex justify-content-end mt-2" style="margin-right: 30px;">
-                    <button id="darkModeToggle" class="btn btn-secondary">Dark Mode</button>
-                </div>
+
                 <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
             </div>
         </nav>
     </div>
-    <div>
-        <div class="row bg-secondary" id="netInfoDiv">
-            <!-- Device Info Section -->
-            <div id="deviceInfoDiv" class="col-md-6 bg-primary text-white p-4">
-                <h1>Device info</h1>
-                <h4>Hostname: {{ deviceInfo["hostname"] }}</h4>
-                <h4>OS: {{ deviceInfo["os"] }}</h4>
-                <h4>IP: {{ deviceInfo["ip"] }}</h4>
-                <h4>MAC: {{ deviceInfo["mac"] }}</h4>
-                <h4>RAM: {{ deviceInfo["ram"] }}</h4>
+    <div class="row">
+    <div class="row">
+        <div class="col-sm-6 offset-sm-3">
+            <!-- Attack setup panel -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4>Attack Setup</h4>
+                </div>
+                <div class="card-body">
+                    <form id="attackSetupForm">
+                        <div class="mb-3">
+                            <label for="interfaceSelect" class="form-label">Select Interface</label>
+                            <select class="form-select" id="interfaceSelect" aria-label="Select Interface">
+                                <!-- Options will be dynamically populated using JavaScript -->
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-check-label">Attack Action:</label>
+							<div class="form-check">
+                                <input class="form-check-input" type="radio" name="attackAction" id="monitorOnly" value="monitorOnly">
+                                <label class="form-check-label" for="monitorOnly">Monitor Only</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="attackAction" id="logNetworks" value="logNetworks">
+                                <label class="form-check-label" for="logNetworks">Log Networks</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="attackAction" id="captureHandshakes" value="captureHandshakes">
+                                <label class="form-check-label" for="captureHandshakes">Capture Handshakes</label>
+                            </div>
 
-            </div>
-
-
-            <!-- Network Info Section -->
-            <div class="col-md-2 text-white p-4" id="netInfoDiv">
-
-                <h1>Network info</h1>
-                <h4 id="networkCount">Networks:</p>
-                <h4 id="totalNetworks">Total Found: </h4>
-                <br>
-
- 
-            </div>
-
-
-
-            <!-- Right column - Network Info -->
-            <div class="col-sm-12 col-lg-2 text-white p-4">
-                <h3>In Range</h3>
-                <h4 id="unknownNetworks">Unknown:</h4>
-                <h4 id="wepNetworks">WEP:</h4>
-                <h4 id="wpaNetworks">WPA:</h4>
-                <h4 id="wpa2Networks">WPA2:</h4>
-            </div>
-            <div class="col-sm-12 col-lg-2 text-white p-4">
-                <h3>Total Count</h3>
-                <h4 id="unknownNetworksSaved">Unknown:</h4>
-                <h4 id="wepNetworksSaved">Total WEP:</h4>
-                <h4 id="wpaNetworksSaved">Total WPA:</h4>
-                <h4 id="wpa2NetworksSaved">Total WPA2:</h4>
-            </div>
-
-
-            </div>
-
-
-        </div>
-
-        <div class="row " id="chartsDiv">
-            <!-- Temperature Chart -->
-            <div class="col-sm-6">
-                <canvas id="temperatureChart"></canvas>
-                <h4 id="temp">CPU Temp: </h4>
-            </div>
-            <!-- CPU Usage Chart -->
-            <div class="col-sm-6">
-                <canvas id="cpuUsageChart"></canvas>
-                <h4 id="cpu">CPU Usage: </h4>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="startAttackBtn">Start War Driving</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -132,8 +104,8 @@
     <script src="Utils/static/bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js"></script>
     <!-- Add Chart.js -->
     <script  src="Utils/static/charts.js"></script>
-    <script src="Utils/static/index.js"></script>
-    <script src="Utils/static/shared.js"></script>   
+
+    <script src="Utils/static/attack.js"></script>   
 
 </body>
 </html>

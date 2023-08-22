@@ -1,3 +1,73 @@
+// Dark mode toggle logic
+const darkModeToggle = document.getElementById('darkModeToggle');
+const body = document.body;
+const topDiv = document.getElementById('topDiv');
+var darkmodeValue = false;
+// Function to update dark mode styles based on API response
+async function updateDarkModeStyles() {
+    try {
+        // Make API call to check if dark mode is enabled
+        const response = await fetch('/getSettings', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const data = await response.json();
+        console.log('Dark mode API response:', data);
+
+        // Update body style and class based on dark mode status
+        if (data.settings.darkmode) {
+            body.classList.add('bg-secondary');
+            topDiv.classList.add('text-white');
+            body.classList.add('dark-mode');
+            darkmodeValue = true;
+        } else {
+            topDiv.classList.remove('text-white');
+            body.classList.remove('bg-secondary');
+            body.classList.remove('dark-mode');
+            darkmodeValue = false;
+        }
+    } catch (error) {
+        console.error('Error updating dark mode styles:', error);
+    }
+}
+
+// Call the function to update styles on initial load
+updateDarkModeStyles();
+
+
+darkModeToggle.addEventListener('click', async () => {
+    try {
+        console.log('Dark mode toggle clicked');
+        // Get current dark mode status
+        const isDarkMode = body.classList.contains('dark-mode');
+
+        // Prepare payload for API call
+        const darkModePayload = {
+            call: 'darkmode',
+            payload: !isDarkMode
+        };
+
+        // Make API call to set dark mode status
+        const setSettingsResponse = await fetch('/setSettings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(darkModePayload)
+        });
+        const setData = await setSettingsResponse.json();
+        console.log('Dark mode set response:', setData);
+
+        // Update styles after toggling
+        updateDarkModeStyles();
+    } catch (error) {
+        console.error('Error toggling dark mode:', error);
+    }
+});
+
+
 let showSSIDs = false; // Initial state
 
 function toggleSSIDs() {
@@ -12,7 +82,7 @@ function toggleSSIDs() {
     showSSIDs = !showSSIDs; // Toggle the state
     // Check if the container element exists before trying to access its style
     const container = document.getElementById('strongestSignalsContainer');
-    
+
 
     if (showSSIDs) {
         document.getElementById('toggleSSIDsBtn').innerText = 'Hide SSIDs';
@@ -33,27 +103,44 @@ const strongestSignalsBarChart = new Chart(strongestSignalsChart, {
             label: 'Signal Strength (0 highest, -100 lowest))',
             data: [], // Will contain signal strength values
             backgroundColor: 'blue', // Customize the bar color
-        }]
+        }],
+
+
     },
     options: {
         indexAxis: 'x', // Display bars on the bottom and go up based on signal strength
         scales: {
             y: {
-               
+
                 title: {
                     display: true,
-                    text: 'Network SSID'
+                    text: 'Network SSID',
+                    color: "lightgrey", // Set legend text color
+                },
+                ticks: {
+                    fontSize: 26, // Set the font size for x-axis labels
                 }
             },
             x: {
                 beginAtZero: true, // Display highest signal strength at the top
                 title: {
                     display: true,
-                    text: 'Signal Strength'
+                    text: 'Signal Strength',
+                    color: "lightgrey", // Set legend text color
+                },
+                ticks: {
+                    fontSize: 40
                 }
+
             }
         },
-
+        plugins: {
+            legend: {
+                labels: {
+                    color: "lightgrey", // Set legend text color
+                }
+            }
+        }
     }
 });
 
@@ -71,8 +158,14 @@ const encryptionPieChartInRange = new Chart(encryptionPieChartInRangeCanvas, {
         }]
     },
     options: {
-        aspectRatio: 2, // Adjust this value to control the chart's aspect ratio
-        // Other options can be added here as needed
+        aspectRatio: 1.4, // Adjust this value to control the chart's aspect ratio
+        plugins: {
+            legend: {
+                labels: {
+                    color: "lightgrey", // Set legend text color
+                }
+            }
+        }
     }
 });
 // Initialize the pie chart for total encryption
@@ -88,20 +181,55 @@ const encryptionPieChartTotal = new Chart(encryptionPieChartTotalCanvas, {
         }]
     },
     options: {
-        aspectRatio: 2, // Adjust this value to control the chart's aspect ratio
-        // Other options can be added here as needed
+        aspectRatio: 1.4, // Adjust this value to control the chart's aspect ratio
+        plugins: {
+            legend: {
+                labels: {
+                    color: "lightgrey", // Set legend text color
+                }
+            }
+        }
+    }
+});
+
+
+const uploadDownloadChart = document.getElementById('uploadanddownload').getContext('2d');
+const uploadanddownload = new Chart(uploadDownloadChart, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Upload',
+            data: [],
+            borderColor: 'red',
+            fill: false,
+        },
+        {
+            label: 'Download',
+            data: [],
+            borderColor: 'blue',
+            fill: false,
+        }]
+    },
+    options: {
+        animation: {
+            duration: 1 // Set animation duration to 0 to disable animation
+        },
+        plugins: {
+            legend: {
+                labels: {
+                    color: "lightgrey", // Set legend text color
+                }
+            }
+        }
     }
 });
 
 
 
-
-
-
-
 // Function to fetch and update the encryption data for the pie chart
 async function updateNetworkCharts() {
-    
+
     const response = await fetch('/networks');
     const data = await response.json();
 
@@ -138,18 +266,6 @@ async function updateNetworkCharts() {
     ];
     encryptionPieChartTotal.update();
 
-    // Update the content of HTML elements with the received data
-    document.getElementById('networkCount').innerText = `In Range: ${data.networkCount}`;
-    document.getElementById('totalNetworks').innerText = `Total Networks: ${data.savedNetworksCount}`;
-    document.getElementById('unknownNetworks').innerText = `Unknown: ${data.unknownEnc}`;
-    document.getElementById('wepNetworks').innerText = `WEP: ${data.WEP}`;
-    document.getElementById('wpaNetworks').innerText = `WPA: ${data.WPA}`;
-    document.getElementById('wpa2Networks').innerText = `WPA2: ${data.WPA2}`;
-    document.getElementById('unknownNetworksSaved').innerText = `Unknown: ${data.unknownSaved}`;
-    document.getElementById('wepNetworksSaved').innerText = `WEP: ${data.savedWEP}`;
-    document.getElementById('wpaNetworksSaved').innerText = `WPA: ${data.savedWPA}`;
-    document.getElementById('wpa2NetworksSaved').innerText = `WPA2: ${data.savedWPA2}`;
-
     // Update the strongest signals bar chart data
     const nearestNetworks = Object.values(data.networks) || [];
     const sortedNetworks = nearestNetworks.sort((a, b) => b.signalStrength - a.signalStrength);
@@ -163,8 +279,34 @@ async function updateNetworkCharts() {
     strongestSignalsBarChart.data.labels = ssidData;
     strongestSignalsBarChart.data.datasets[0].data = signalData;
     strongestSignalsBarChart.update();
+
+    document.getElementById('upload').innerText = `Upload: ${data.interfaceUsage.upload}`;
+    document.getElementById('download').innerText = `Download: ${data.interfaceUsage.download}`;
+    // Update upload and download chart data
+    const uploadData = parseFloat(data.interfaceUsage.upload);
+    const downloadData = parseFloat(data.interfaceUsage.download);
+
+    uploadanddownload.data.labels.push(new Date().toLocaleTimeString()); // Update labels with timestamp
+    uploadanddownload.data.datasets[0].data.push(uploadData);
+    uploadanddownload.data.datasets[1].data.push(downloadData);
+
+    // Limit the number of data points displayed on the chart
+    const maxDataPoints = 20;
+    if (uploadanddownload.data.labels.length > maxDataPoints) {
+        uploadanddownload.data.labels.shift();
+        uploadanddownload.data.datasets[0].data.shift();
+        uploadanddownload.data.datasets[1].data.shift();
+    }
+
+    uploadanddownload.update();
+
 }
 
 // Initial call to update the chart and set interval for updates
 updateNetworkCharts();
 setInterval(updateNetworkCharts, 7000); // Update every 7 seconds
+
+
+
+
+
