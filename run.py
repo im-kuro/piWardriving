@@ -2,6 +2,8 @@
 from Utils import tools, helpers
 import subprocess, threading,json, argparse
 
+from Utils import bettercap
+
 helpersObj = helpers.IOFuncs.Default()
 
 argparseObj = argparse.ArgumentParser()

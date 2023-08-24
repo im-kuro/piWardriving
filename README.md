@@ -26,10 +26,10 @@ python run.py
 
 
 ## Todo
-- [x] clean up analytics page
+- [x] clean up analytics page & add attacking analytics (captured packets, deauthed networks, ect)
 - [x] finish attack page
 - [x] finish settings options
 - [x] Add deticated page for attacking a specific AP
-
+- [x] add dynamic deauth procs based on cpu usage
 
 

@@ -50,59 +50,85 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener('DOMContentLoaded', function () {
     // Populate the interface selection dropdown based on data
     const interfaceSelect = document.getElementById('interfaceSelect');
-
     // Handle form submission
     const attackSetupForm = document.getElementById('attackSetupForm');
     const startAttackBtn = document.getElementById('startAttackBtn');
     let isWarDrivingStarted = false; // Track the war driving state
     
     attackSetupForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const interfaceValue = interfaceSelect.value; // This line is mentioned in the error
-        const selectedAction = document.querySelector('input[name="attackAction"]:checked').value;
-        
-        // Perform AJAX request to start or stop war driving
-        try {
-            startAttackBtn.disabled = true;
-            if (!isWarDrivingStarted) {
-                startAttackBtn.textContent = 'Starting...';
-                const response = await fetch('/startwardriving', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        interface: interfaceValue,
-                        action: selectedAction
-                    })
-                });
+        event.preventDefault(); // Prevent default form submission
+        const selectedInterfaceIdx = interfaceSelect.value;
+        const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
+
+
+        const selectedActionInput = document.querySelector('input[name="attackAction"]:checked');
+        if (selectedActionInput === null) {
+            alert('Please select an action');
+        } else {
+            const selectedAction = selectedActionInput.value;
+            // Perform AJAX request to start or stop war driving
+            try {
                 
-                if (response.ok) {
-                    startAttackBtn.textContent = 'War Driving Started';
-                    startAttackBtn.classList.remove('btn-primary');
-                    startAttackBtn.classList.add('btn-danger');
-                    isWarDrivingStarted = true; // Update the war driving state
+                if (!isWarDrivingStarted) {
+                    startAttackBtn.textContent = 'Starting...';
+                    const response = await fetch('/startwardriving', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            interface: selectedInterfaceIdx,
+                            interfaceName: selectedInterfaceName,
+                            action: selectedAction
+                        })
+                    });
+                    const responseMessage = await response.json();
+                    if (responseMessage.message == "noInterfaceSelected"){
+                        // If no interface is chosen, show the modal
+                        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+                        interfaceModal.show();
+                    }
+                    if (response.ok) {
+                        startAttackBtn.textContent = 'War Driving Started';
+                        startAttackBtn.classList.remove('btn-primary');
+                        startAttackBtn.classList.add('btn-danger');
+                        isWarDrivingStarted = true; // Update the war driving state
+                    } else {
+                        startAttackBtn.textContent = 'Error Starting War Driving';
+                    }
                 } else {
-                    startAttackBtn.textContent = 'Error Starting War Driving';
+                    startAttackBtn.textContent = 'Stopping...';
+                    // Perform AJAX request to stop war driving
+                    // Modify the fetch request accordingly
+                    const response = await fetch('/startwardriving', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            interface: selectedInterfaceIdx,
+                            interfaceName: selectedInterfaceName,
+                            action: "terminate"
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        startAttackBtn.textContent = 'Start War Driving';
+                        startAttackBtn.classList.remove('btn-danger');
+                        startAttackBtn.classList.add('btn-primary');
+                        isWarDrivingStarted = false; // Update the war driving state
+                    } else {
+                        startAttackBtn.textContent = 'Error Stopping War Driving';
+                    }
                 }
-            } else {
-                startAttackBtn.textContent = 'Stopping...';
-                // Perform AJAX request to stop war driving
-                // Modify the fetch request accordingly
-                
-                if (response.ok) {
-                    startAttackBtn.textContent = 'Start War Driving';
-                    startAttackBtn.classList.remove('btn-danger');
-                    startAttackBtn.classList.add('btn-primary');
-                    isWarDrivingStarted = false; // Update the war driving state
-                } else {
-                    startAttackBtn.textContent = 'Error Stopping War Driving';
-                }
+            } catch (error) {
+                console.error('Error:', error);
+                startAttackBtn.textContent = 'Error';
             }
-        } catch (error) {
-            console.error('Error:', error);
-            startAttackBtn.textContent = 'Error';
         }
+
+
+      
         
         startAttackBtn.disabled = false;
     });
@@ -148,6 +174,8 @@ async function updateDarkModeStyles() {
         console.error('Error updating dark mode styles:', error);
     }
 }
+
+updateDarkModeStyles();
 
 darkModeToggle.addEventListener('click', async () => {
     try {

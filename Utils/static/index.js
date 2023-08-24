@@ -17,7 +17,7 @@ async function updateDarkModeStyles() {
             },
         });
         const data = await response.json();
-        ;
+        
 
         // Update body style and class based on dark mode status
         if (data.settings.darkmode) {

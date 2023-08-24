@@ -50,6 +50,8 @@ class database:
 				                "idx": None,
 				                "name": None
 				            },
+						"deauthedAPs":{},
+						"capturedHandshakes": {},
 				            "darkmode": False,
 							"onlShowWEP": False,
 							"onlyShowWPA": False,

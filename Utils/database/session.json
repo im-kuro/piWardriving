@@ -5,6 +5,8 @@
             "idx": null,
             "name": null
         },
+        "deauthedAPs": {},
+        "capturedHandshakes": {},
         "darkmode": false,
         "onlShowWEP": false,
         "onlyShowWPA": false,

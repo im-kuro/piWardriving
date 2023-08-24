@@ -1,10 +1,9 @@
 from sanic import Sanic
 from sanic.response import json, html
-import platform,socket,re,uuid,psutil,subprocess, pywifi
+import platform,socket,re,uuid,psutil, asyncio
 from jinja2 import Environment, FileSystemLoader
 import tools, helpers
-
-
+import bettercap
 
 app = Sanic("WardrivingTool")
 app.static('Utils/static/', 'Utils/static/', directory_view=True, name="static")  # Assuming your static files are in a 'static' folder
@@ -18,11 +17,14 @@ env = Environment(loader=FileSystemLoader(template_dir))
 # init the session database
 helpers.database().__initDatabase__()
 
-app.ctx.interfaces = tools.toolkit.showInterfaces()
+app.ctx.interfaces = tools.showInterfaces()
 if helpers.database().readFromDB("settings") is not None:
     app.ctx.interface = helpers.database().readFromDB("settings")["interfaceInfo"]["idx"]
     app.ctx.interfaceName = helpers.database().readFromDB("settings")["interfaceInfo"]["name"]
 else: app.ctx.interface = None; app.ctx.interfaceName = None
+# Shared variable to indicate whether the loop should run or not
+loop_running = False
+
 """
 
 FRONT END CODE HERE
@@ -81,7 +83,7 @@ BACK END CODE HERE
 async def setInterface(request):
     app.ctx.interface = request.json["interfaceIdx"]
     app.ctx.interfaceName = request.json["interfaceName"]
-    tools.toolkit.__init__(app.ctx.interface)
+    tools.__init__(app.ctx.interface)
     helpers.database().writeToDB("interfaceInfo", {"interfaceInfo":{"idx": app.ctx.interface, "name": app.ctx.interfaceName}})
     return json({"status": "success", "interface": app.ctx.interface})
 
@@ -121,32 +123,61 @@ async def getSettings(request):
 
 
 
+# async local func handler so we can use global variables
+async def wardrivingLoop(actionCall: str):
+    global loop_running
+    while loop_running:
+        
+        networks = await tools.scan_wifi_networks(app.ctx.interface)
+
+        await tools.deauthHandler(bettercap,app.ctx.interfaceName, networks, actionCall)
+
+        await asyncio.sleep(5)  # Adjust the sleep interval as needed
+
 
 @app.route('/startwardriving', methods=["POST"])
 async def startWardrive(request):
-    return json({'status': "success", "results": "cum"})
+    if app.ctx.interface is None:
+        return json({"status": "error", "message": "noInterfaceSelected"})
+    global loop_running
+    action = request.json["action"]
 
+    if action == "terminate":
+        # Stop the loop by setting the shared variable to False
+        loop_running = False
+        return json({"status": "Loop terminated"})
 
+    elif action in ["monitorOnly", "logNetworks", "captureHandshakes"]:
+        if not loop_running:
+            # Start the loop by setting the shared variable to True
+            loop_running = True
+            # Create an asyncio task to run the loop function
+            status = asyncio.create_task(wardrivingLoop(action))
+
+            return json({"status": "Loop started"})
+        else:
+            return json({"status": "Loop already running"})
+
+   
 
 
 @app.route('/data', methods=["GET"])
 async def getData(request):
-    return json({'temperature': tools.toolkit.get_cpu_temperature(), 'cpuUsage': tools.toolkit.get_cpu_usage()})
-
+    if request.method == "GET": return json({'temperature': tools.get_cpu_temperature(), 'cpuUsage': tools.get_cpu_usage()})
+    else: return json({"status": "error", "message": "Invalid request method"})
 
 @app.route('/savedNetworks', methods=['GET'])
 async def getSaved(request):
-    return json({"savedNetworks": helpers.database().readFromDB("savedNetworks")})
-
+    if request.method == "GET": return json({"savedNetworks": helpers.database().readFromDB("savedNetworks")})
+    else: return json({"status": "error", "message": "Invalid request method"})
 
 @app.route('/networks', methods=['GET'])
 async def getNetworks(request):
-    
-    networkRes = await tools.toolkit.scan_wifi_networks(app.ctx.interface)
+    if app.ctx.interface is None:
+        return json({"status": "error", "message": "noInterfaceSelected"})
+    networkRes = await tools.scan_wifi_networks(app.ctx.interface)
 
-    if networkRes is None:
-        return json({"status": "error", "message": "No interface selected"})
-    
+
     savedNetworks = helpers.database().readFromDB("savedNetworks")
     
     
@@ -158,7 +189,7 @@ async def getNetworks(request):
             helpers.database().writeToDB("savedNetworks", savedNetworks) 
             network["saved"] = False
             
-    networkUsage = tools.toolkit.getInterfaceUsage(app.ctx.interface)
+    networkUsage = tools.getInterfaceUsage(app.ctx.interface)
             
 
     unknown = 0
