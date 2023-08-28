@@ -1,7 +1,7 @@
 
 import pywifi, subprocess, json, time
 from pywifi import const
-import psutil,subprocess, pywifi
+import psutil, pywifi
 from gpiozero import CPUTemperature
 import asyncio
 from scapy.all import ARP, Ether, srp

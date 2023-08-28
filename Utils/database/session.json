@@ -5,8 +5,6 @@
             "idx": null,
             "name": null
         },
-        "deauthedAPs": {},
-        "capturedHandshakes": {},
         "darkmode": false,
         "onlShowWEP": false,
         "onlyShowWPA": false,
@@ -15,6 +13,9 @@
         "alertOnWEP": false,
         "alertOnWPA": false,
         "alertOnWPA2": false,
-        "filterBySignal": false
+        "filterBySignal": false,
+        "errors": {},
+        "deauthedAPs": {},
+        "capturedHandshakes": {}
     }
 }

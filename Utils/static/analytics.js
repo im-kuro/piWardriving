@@ -68,29 +68,69 @@ darkModeToggle.addEventListener('click', async () => {
 });
 
 
-let showSSIDs = false; // Initial state
-
-function toggleSSIDs() {
-    showSSIDs = !showSSIDs; // Toggle the state
-
-    updateNetworkCharts(); // Call the chart update function
-}
 
 
 
-function toggleSSIDs() {
-    showSSIDs = !showSSIDs; // Toggle the state
-    // Check if the container element exists before trying to access its style
-    const container = document.getElementById('strongestSignalsContainer');
 
 
-    if (showSSIDs) {
-        document.getElementById('toggleSSIDsBtn').innerText = 'Hide SSIDs';
-    } else {
-        document.getElementById('toggleSSIDsBtn').innerText = 'Show SSIDs';
+const MAX_DATA_POINTS = 20;
+const temperatureChart = document.getElementById('temperatureChart').getContext('2d');
+const cpuUsageChart = document.getElementById('cpuUsageChart').getContext('2d');
+
+
+
+const temperatureChartInstance = new Chart(temperatureChart, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Temperature',
+            data: [],
+            borderColor: 'red',
+            fill: false,
+        }]
+    },
+    options: {
+        animation: {
+            duration: 1 // Set animation duration to 0 to disable animation
+        },
+        plugins: {
+            legend: {
+                labels: {
+                    color: "lightgrey", // Set legend text color
+                }
+            }
+        }
     }
-    updateNetworkCharts(); // Call the chart update function
-}
+});
+const cpuUsageChartInstance = new Chart(cpuUsageChart, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'CPU Usage',
+            data: [],
+            borderColor: 'blue',
+            fill: false,
+        }]
+    },
+    options: {
+        animation: {
+            duration: 1 // Set animation duration to 0 to disable animation
+        },
+        plugins: {
+            legend: {
+                labels: {
+                    color: "lightgrey", // Set legend text color
+                }
+            }
+        }
+    }
+
+});
+
+
+
 
 
 
@@ -228,22 +268,39 @@ const uploadanddownload = new Chart(uploadDownloadChart, {
 
 
 // Function to fetch and update the encryption data for the pie chart
-async function updateNetworkCharts() {
+async function updateCharts() {
 
-    const response = await fetch('/networks');
-    const data = await response.json();
+    const networksResponse = await fetch('/networks');
+    const networksdata = await networksResponse.json();
+
+    if (networksdata.message == "noInterfaceSelected"){
+        // If no interface is chosen, show the modal
+        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+        interfaceModal.show();
+    }
+    // Update the content of HTML elements with the received data
+    document.getElementById('networkCount').innerText = `In Range: ${networksdata.networkCount}`;
+    document.getElementById('totalNetworks').innerText = `Total Networks: ${networksdata.savedNetworksCount}`;
+    document.getElementById('unknownNetworks').innerText = `Unknown: ${networksdata.unknownEnc}`;
+    document.getElementById('wepNetworks').innerText = `WEP: ${networksdata.WEP}`;
+    document.getElementById('wpaNetworks').innerText = `WPA: ${networksdata.WPA}`;
+    document.getElementById('wpa2Networks').innerText = `WPA2: ${networksdata.WPA2}`;
+    document.getElementById('unknownNetworksSaved').innerText = `Unknown: ${networksdata.unknownSaved}`;
+    document.getElementById('wepNetworksSaved').innerText = `WEP: ${networksdata.savedWEP}`;
+    document.getElementById('wpaNetworksSaved').innerText = `WPA: ${networksdata.savedWPA}`;
+    document.getElementById('wpa2NetworksSaved').innerText = `WPA2: ${networksdata.savedWPA2}`;
 
     // Update the pie chart data
-    const wpaCount = data.WPA || 0;
-    const wpa2Count = data.WPA2 || 0;
-    const wepCount = data.WEP || 0;
-    const unknownCount = data.unknownEnc || 0;
+    const wpaCount = networksdata.WPA || 0;
+    const wpa2Count = networksdata.WPA2 || 0;
+    const wepCount = networksdata.WEP || 0;
+    const unknownCount = networksdata.unknownEnc || 0;
 
     // Update the pie chart data
-    const wpaCountSaved = data.savedWPA || 0;
-    const wpa2CountSaved = data.savedWPA2 || 0;
-    const wepCountSaved = data.savedWEP || 0;
-    const unknownCountSaved = data.unknownEnc || 0;
+    const wpaCountSaved = networksdata.savedWPA || 0;
+    const wpa2CountSaved = networksdata.savedWPA2 || 0;
+    const wepCountSaved = networksdata.savedWEP || 0;
+    const unknownCountSaved = networksdata.unknownEnc || 0;
 
 
     // Update pie chart data
@@ -267,7 +324,7 @@ async function updateNetworkCharts() {
     encryptionPieChartTotal.update();
 
     // Update the strongest signals bar chart data
-    const nearestNetworks = Object.values(data.networks) || [];
+    const nearestNetworks = Object.values(networksdata.networks) || [];
     const sortedNetworks = nearestNetworks.sort((a, b) => b.signalStrength - a.signalStrength);
     const limitedNetworks = sortedNetworks.slice(0, 10); // Limit to max 10 data points
 
@@ -280,11 +337,11 @@ async function updateNetworkCharts() {
     strongestSignalsBarChart.data.datasets[0].data = signalData;
     strongestSignalsBarChart.update();
 
-    document.getElementById('upload').innerText = `Upload: ${data.interfaceUsage.upload}`;
-    document.getElementById('download').innerText = `Download: ${data.interfaceUsage.download}`;
+    document.getElementById('upload').innerText = `Upload: ${networksdata.interfaceUsage.upload}`;
+    document.getElementById('download').innerText = `Download: ${networksdata.interfaceUsage.download}`;
     // Update upload and download chart data
-    const uploadData = parseFloat(data.interfaceUsage.upload);
-    const downloadData = parseFloat(data.interfaceUsage.download);
+    const uploadData = parseFloat(networksdata.interfaceUsage.upload);
+    const downloadData = parseFloat(networksdata.interfaceUsage.download);
 
     uploadanddownload.data.labels.push(new Date().toLocaleTimeString()); // Update labels with timestamp
     uploadanddownload.data.datasets[0].data.push(uploadData);
@@ -300,13 +357,101 @@ async function updateNetworkCharts() {
 
     uploadanddownload.update();
 
+    const dataresponse = await fetch('/data');
+    const datadata = await dataresponse.json();
+    
+    document.getElementById('temp').innerHTML = "CPU Temp: " + datadata.temperature;
+    document.getElementById('cpu').innerHTML = "CPU Usage: " + datadata.cpuUsage;
+    // Update temperature chart
+    temperatureChartInstance.data.labels.push(new Date().toLocaleTimeString());
+    temperatureChartInstance.data.datasets[0].data.push(datadata.temperature);
+    temperatureChartInstance.update();
+    // Update CPU usage chart
+    cpuUsageChartInstance.data.labels.push(new Date().toLocaleTimeString());
+    cpuUsageChartInstance.data.datasets[0].data.push(datadata.cpuUsage);
+    cpuUsageChartInstance.update();
+    // Limit the number of data points to the defined maximum
+    if (temperatureChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+        temperatureChartInstance.data.datasets[0].data.shift();
+        temperatureChartInstance.data.labels.shift(); // Also shift corresponding label
+    }
+    if (cpuUsageChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+        cpuUsageChartInstance.data.datasets[0].data.shift();
+        cpuUsageChartInstance.data.labels.shift(); // Also shift corresponding label
+    }
 }
 
 // Initial call to update the chart and set interval for updates
-updateNetworkCharts();
-setInterval(updateNetworkCharts, 7000); // Update every 7 seconds
+updateCharts();
+setInterval(updateCharts, 6000); // Update every 6 seconds
 
 
 
 
+
+document.addEventListener("DOMContentLoaded", function () {
+    const interfaceForm = document.getElementById('interfaceForm');
+    const interfaceSelect = document.getElementById('interfaceSelect');
+    const selectedInterfaceLabel = document.getElementById('selectedInterface');
+    // Check if an interface is already chosen
+    const currentInterface = selectedInterfaceLabel.getAttribute('value'); // Use getAttribute to get the value
+    if (currentInterface == "None") {
+        // If no interface is chosen, show the modal
+        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+        interfaceModal.show();
+        // Add submit event listener to the form
+        interfaceForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+            const selectedInterfaceIdx = interfaceSelect.value;
+            const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
+            // Create JSON payload
+            const payload = {
+                interfaceIdx: selectedInterfaceIdx,
+                interfaceName: selectedInterfaceName
+            };
+            // Make API call using fetch
+            fetch('/setInterface', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle API response if needed
+                console.log(data);
+                // Close the modal after submitting
+                interfaceModal.hide();
+                selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceName}`;
+            })
+            .catch(error => {
+                // Handle error if needed
+                console.error('Error:', error);
+            });
+        });
+    } else {
+        // If an interface is already chosen, update the label
+        selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceLabel.textContent}`;
+    }
+});
+
+
+
+let showSSIDs = false; // Initial state
+
+
+function toggleSSIDs() {
+    showSSIDs = !showSSIDs; // Toggle the state
+    // Check if the container element exists before trying to access its style
+    const container = document.getElementById('strongestSignalsContainer');
+
+
+    if (showSSIDs) {
+        document.getElementById('toggleSSIDsBtn').innerText = 'Hide SSIDs';
+    } else {
+        document.getElementById('toggleSSIDsBtn').innerText = 'Show SSIDs';
+    }
+    updateCharts(); // Call the chart update function
+}
 

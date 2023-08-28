@@ -12,7 +12,7 @@ app.static('Utils/static/', 'Utils/static/', directory_view=True, name="static")
 template_dir = 'Utils/static/'  # Path to your template directory
 env = Environment(loader=FileSystemLoader(template_dir))
 
-
+print("You can now browse to http://127.0.0.1:6969/ to view the web interface (please plug in your wifi adapter if you haven't already)")
 
 # init the session database
 helpers.database().__initDatabase__()

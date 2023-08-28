@@ -3,4 +3,7 @@ pywifi
 psutil
 jinja2
 sanic
-
+psutil
+asyncio
+gpiozero
+scapy
