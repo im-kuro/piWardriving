@@ -1,4 +1,5 @@
 # Raspberry pi wardriving web tool
+![image](https://github.com/im-kuro/piWardriving/assets/86091489/4c23b57c-ebf0-4979-8ec5-4e20f516f83b)
 
 This is a web tool for wardriving with a raspberry pi. CURREENTLY still in very early development.
 The reason im making this is to learn js and bootstrap mainly, plus it looks cool and i haven't seen 
@@ -9,19 +10,16 @@ many others like it.
 ## Installation
 
 Clone the repo using git.
-![image](https://github.com/im-kuro/piWardriving/assets/86091489/be2873dd-5eb5-4559-92bf-d955a8851a53)
 
 ```bash
 git clone https://github.com/im-kuro/piwardriving
 ```
 
 install py libs.
-![image](https://github.com/im-kuro/piWardriving/assets/86091489/ac2c2496-c6db-4002-a338-17605fd98a3b)
 
 ```bash
 pip install -r requirements.txt
 ```
-![image](https://github.com/im-kuro/piWardriving/assets/86091489/61127d6d-9a7d-4d14-8826-435ab0e23e4b)
 
 Run the server (please note future installs will be easier)
 ```bash
