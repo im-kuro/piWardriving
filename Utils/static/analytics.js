@@ -273,11 +273,6 @@ async function updateCharts() {
     const networksResponse = await fetch('/networks');
     const networksdata = await networksResponse.json();
 
-    if (networksdata.message == "noInterfaceSelected"){
-        // If no interface is chosen, show the modal
-        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
-        interfaceModal.show();
-    }
     // Update the content of HTML elements with the received data
     document.getElementById('networkCount').innerText = `In Range: ${networksdata.networkCount}`;
     document.getElementById('totalNetworks').innerText = `Total Networks: ${networksdata.savedNetworksCount}`;
