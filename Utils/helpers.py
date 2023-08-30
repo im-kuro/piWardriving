@@ -44,25 +44,35 @@ class database:
 			with open(self.path, 'w') as file:
 				json.dump(
 				    {	
-						"savedNetworks": {},
-				        "settings": {
-				            "interfaceInfo": {
-				                "idx": None,
-				                "name": None
-				            },
-				        "darkmode": False,
-						"onlShowWEP": False,
-						"onlyShowWPA": False,
-						"onlyShowWPA2": False,
-						"dontShowUnknown": False,
-						"alertOnWEP": False,
-						"alertOnWPA": False,
-						"alertOnWPA2": False,
-						"filterBySignal": False,
-						"errors": {},
-						"deauthedAPs":{},
+					
+						"savedNetworks": {
+						},
+						"deauthedAPs": {},
 						"capturedHandshakes": {},
-				        }
+						"settings": {
+							"interfaceInfo": {
+								"idx": None,
+								"name": None
+							},
+							"darkmode": False,
+							"onlShowWEP": False,
+							"onlyShowWPA": False,
+							"onlyShowWPA2": False,
+							"dontShowUnknown": False,
+							"alertOnWEP": False,
+							"alertOnWPA": False,
+							"alertOnWPA2": False,
+							"filterBySignal": False,
+
+						},
+						"interfaceInfo": {
+							"interfaceInfo": {
+								"idx": "0",
+								"name": "Realtek 8812BU Wireless LAN 802.11ac USB NIC"
+							}
+						},
+						"errors": {}
+					
 				    },
 				    file, indent=4  # You can adjust the indentation as needed
 				)

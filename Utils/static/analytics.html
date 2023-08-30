@@ -65,34 +65,38 @@
         </div>
     </nav>
 
-    <div class="container-fluid">
+    <div class="container-fluid p-2">
         <div class="row" id="topDiv">
+            
+
             <!-- Left half column - Device Analytics -->
-            <div class="col-sm-12 col-lg-3 p-4">
-                <h2>Device Analytics</h2>
+            <div class="col-sm-6 col-lg-3 p-2">
+                <h3>Device Analytics</h3>
                 <!-- Temperature Chart -->
-                <div class="col-12">
+                <div class="col-sm-12">
                     <canvas id="temperatureChart"></canvas>
                     <h5 id="temp">CPU Temp: </h5>
                 </div>
                 <!-- CPU Usage Chart -->
-                <div class="col-12">
+                <div class="col-sm-12">
                     <canvas id="cpuUsageChart"></canvas>
                     <h5 id="cpu">CPU Usage: </h5>
                 </div>
             </div>
 
             <!-- Middle column - Networks Chart -->
-            <div class="col-sm-12 col-lg-2  p-4">
-                <h2>Networks Analytics</h2>
+            <div class="col-sm-5 col-lg-2  p-2">
+                <h3>Networks Analytics</h3>
                 <canvas id="encryptionPieChartInRange"></canvas>
                 <canvas id="encryptionChartSaved"></canvas>
             </div>
 
+
+
             <!-- Right column - Network Info -->
-            <div class="col-sm-12 col-lg-7 p-4">
+            <div class="col-sm-12 col-lg-7 p-2">
                 <div class="row">
-                    <div class="col-sm-8 col-lg-4 p-4">            
+                    <div class="col-sm-4 col-lg-4 ">            
                         <h2>Networks Info</h2>
                         <h4 id="networkCount">In Range: </h4>
                         <h4 id="totalNetworks">Total Found: </h4>
@@ -100,14 +104,14 @@
                         <h4 id="upload">Upload: </h4>
                         <h4 id="download">Download: </h4>
                     </div>
-                    <div class="col-sm-4 col-lg-4 p-4">
+                    <div class="col-sm-4 col-lg-4 ">
                         <h2>In Range</h2>
                         <h4 id="unknownNetworks">Unknown:</h4>
                         <h4 id="wepNetworks">WEP:</h4>
                         <h4 id="wpaNetworks">WPA:</h4>
                         <h4 id="wpa2Networks">WPA2:</h4>
                     </div>
-                    <div class="col-sm-4 col-lg-4 p-4">
+                    <div class="col-sm-4 col-lg-4 ">
                         <h2>Total Count</h2>
                         <h4 id="unknownNetworksSaved">Unknown:</h4>
                         <h4 id="wepNetworksSaved">Total WEP:</h4>
@@ -119,39 +123,77 @@
 
             
             <div class="row">
-                <div class="col-sm-12 col-lg-6  p-4">
-                    <h3>Strongest Signals    <button id="toggleSSIDsBtn" onclick="toggleSSIDs()" class="btn bg-primary-subtle">Show SSIDs</button></h3>
-
-                    <canvas id="strongestSignalsChart"></canvas>
+                <!-- Left half column - Device Analytics -->
+                <div class="col-sm-6 col-lg-6 p-2">
+                        <h3>Strongest Signals <button id="toggleSSIDsBtn" onclick="toggleSSIDs()" class="btn bg-primary-subtle">Show SSIDs</button></h3>
+                        <canvas id="strongestSignalsChart"></canvas>
                 </div>
-                <div class="col-sm-12 col-lg-6  p-4">
-                    <h3>Upload & Download</h3>
-                    <canvas id="uploadanddownload"></canvas>
+
+                <!-- Middle column - Networks Chart -->
+                <div class="col-sm-6 col-lg-6  p-2">
+                        <h3>Upload & Download</h3>
+                        <canvas id="uploadanddownload"></canvas>
                 </div>
             </div>
-
-        </div>
-
-
-
+        
 
 
         </div>
 
 
-        <div class="row">
-            <!-- Bottom left column - Additional Info -->
-            <div class="col-md-6 bg-secondary text-white p-4">
-                <h3>saved networks + deauthed networks + handshakes captured</h3>
-                <!-- Add additional information here -->
+
+
+
+        </div>
+        <div class="row" id="listsInfo">
+            <!-- Bottom left column - Network Info List -->
+            <div class="col-md-6">
+                <h3>Network Info</h3>
+                <ul id="networkInfoList" class="scrollable-list">
+                    <!-- Populate this list dynamically using JavaScript -->
+                </ul>
             </div>
 
-            <!-- Bottom right column - Additional Info -->
-            <div class="col-md-6 bg-secondary text-white p-4">
-                <h3>Additional Info</h3>
-                <!-- Add additional information here -->
+            <!-- Bottom right column - Handshake Info List -->
+            <div class="col-md-6 ">
+                <h3>Handshake Info</h3>
+                <ul id="handshakeInfoList" class="scrollable-list">
+                    <!-- Populate this list dynamically using JavaScript -->
+                </ul>
             </div>
         </div>
+
+
+    <style>
+
+    /* Style for the scrollable list */
+    .scrollable-list {
+        max-height: 300px; /* Adjust the value to your preference */
+        overflow-y: auto;
+    }
+
+    /* Style for network info list items */
+    .network-info-item {
+        margin-bottom: 10px;
+
+        padding: 5px;
+
+    }
+
+    /* Style for network info headers */
+    .network-info-header {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    /* Style for network info details */
+    .network-info-details {
+        margin-top: 0;
+    }
+
+
+    </style>
+
     </div>
     <!-- Add Bootstrap JS and Popper.js -->
     <script src="Utils/static/bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js"></script>

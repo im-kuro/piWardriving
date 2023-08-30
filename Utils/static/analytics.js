@@ -2,6 +2,7 @@
 const darkModeToggle = document.getElementById('darkModeToggle');
 const body = document.body;
 const topDiv = document.getElementById('topDiv');
+const listsInfo = document.getElementById('listsInfo');
 var darkmodeValue = false;
 // Function to update dark mode styles based on API response
 async function updateDarkModeStyles() {
@@ -21,11 +22,13 @@ async function updateDarkModeStyles() {
             body.classList.add('bg-secondary');
             topDiv.classList.add('text-white');
             body.classList.add('dark-mode');
+            listsInfo.classList.add('text-white');s
             darkmodeValue = true;
         } else {
             topDiv.classList.remove('text-white');
             body.classList.remove('bg-secondary');
             body.classList.remove('dark-mode');
+            listsInfo.classList.remove('text-white');
             darkmodeValue = false;
         }
     } catch (error) {
@@ -273,6 +276,44 @@ async function updateCharts() {
     const networksResponse = await fetch('/networks');
     const networksdata = await networksResponse.json();
 
+
+    const networkInfoList = document.getElementById('networkInfoList');
+    networkInfoList.innerHTML = ''; // Clear the list before populating
+
+    for (const networkName in networksdata.savedNetworks) {
+        const network = networksdata.savedNetworks[networkName];
+
+        const listItem = document.createElement('li');
+        listItem.classList.add('network-info-item'); // Add a custom class for styling
+
+        const header = document.createElement('p');
+        header.classList.add('network-info-header'); // Add a custom class for styling
+        header.textContent = `SSID: ${network.ssid}, BSSID: ${network.bssid}`;
+
+        const details = document.createElement('p');
+        details.classList.add('network-info-details'); // Add a custom class for styling
+        details.textContent = `Encryption: ${network.encryption.join(', ')}, Signal Strength: ${network.signalStrength}`;
+
+        const attackButton = document.createElement('button');
+        attackButton.textContent = 'Attack'; // Set button text
+        attackButton.classList.add('attack-button'); // Add a class for styling
+        attackButton.addEventListener('click', () => {
+            // Base64 encode SSID and BSSID
+            const encodedSSID = btoa(network.ssid);
+            const encodedBSSID = btoa(network.bssid);
+            
+            // Redirect to /attackNetwork with base64 encoded parameters
+            window.location.href = `/attackNetwork?ssid=${encodedSSID}&bssid=${encodedBSSID}`;
+        });
+
+
+        listItem.appendChild(header);
+        listItem.appendChild(details);
+        listItem.appendChild(attackButton); // Add the attack button
+
+        networkInfoList.appendChild(listItem);
+    }
+
     // Update the content of HTML elements with the received data
     document.getElementById('networkCount').innerText = `In Range: ${networksdata.networkCount}`;
     document.getElementById('totalNetworks').innerText = `Total Networks: ${networksdata.savedNetworksCount}`;
@@ -447,6 +488,23 @@ function toggleSSIDs() {
     } else {
         document.getElementById('toggleSSIDsBtn').innerText = 'Show SSIDs';
     }
+
+    updateLists(); // Call the list update function
     updateCharts(); // Call the chart update function
+
 }
+
+function updateLists() {
+    const networkInfoList = document.getElementById('networkInfoList');
+    const handshakeInfoList = document.getElementById('handshakeInfoList');
+    
+    const ssids = document.querySelectorAll('.ssid'); // Assuming the SSID elements have a class of "ssid"
+    console.log(ssids)
+    for (const ssid of ssids) {
+        ssid.style.display = showSSIDs ? 'block' : 'none';
+    }
+}
+
+
+
 

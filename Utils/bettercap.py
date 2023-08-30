@@ -10,7 +10,8 @@ from time import sleep
 
 
 def decode(r):
-    try:
+    try:    
+        print(r)
         return r.json()
     except Exception as e:
         if r.status_code == 200:

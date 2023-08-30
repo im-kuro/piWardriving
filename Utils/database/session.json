@@ -1,5 +1,7 @@
 {
     "savedNetworks": {},
+    "deauthedAPs": {},
+    "capturedHandshakes": {},
     "settings": {
         "interfaceInfo": {
             "idx": null,
@@ -13,9 +15,13 @@
         "alertOnWEP": false,
         "alertOnWPA": false,
         "alertOnWPA2": false,
-        "filterBySignal": false,
-        "errors": {},
-        "deauthedAPs": {},
-        "capturedHandshakes": {}
-    }
+        "filterBySignal": false
+    },
+    "interfaceInfo": {
+        "interfaceInfo": {
+            "idx": "0",
+            "name": "Realtek 8812BU Wireless LAN 802.11ac USB NIC"
+        }
+    },
+    "errors": {}
 }

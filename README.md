@@ -9,14 +9,31 @@ any others like it.
 
 ## Installation
 
-Clone the repo using git.
+### Install go & bettercap
+
+```bash
+sudo wget -q -O - https://archive.kali.org/archive-key.asc | sudo apt-key add
+```
+edit the sources.list file
+```bash
+sudo nano /etc/apt/sources.list
+```
+add the following line to the file
+```bash
+deb http://http.kali.org/kali kali-rolling main contrib non-free
+```
+update
+```bash
+sudo apt update
+```
+
+### Clone the repo using git.
 
 ```bash
 git clone https://github.com/im-kuro/piwardriving
 ```
 
 install py libs.
-
 ```bash
 pip install -r requirements.txt
 ```
@@ -29,8 +46,8 @@ python run.py
 
 
 ## Todo
-- [x] clean up analytics page & add attacking analytics (captured packets, deauthed networks, ect)
+- [x] clean up analytics page & add attacking analytics (captured packets, deauthed networks, ect) 40%
 - [x] finish attack page
-- [x] finish settings options
 - [x] Add deticated page for attacking a specific AP
 - [x] add dynamic deauth procs based on cpu usage
+- [x] 
