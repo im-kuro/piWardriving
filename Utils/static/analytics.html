@@ -25,6 +25,7 @@
                         </select>
                     </div>
                     <div class="modal-footer">
+                    
                         <button type="submit" class="btn btn-primary">Submit</button>
                     </div>
                 </form>
@@ -55,11 +56,14 @@
 
                 </ul>
             </div>
-                         
+            <div class="d-flex justify-content-end mt-2" style="margin-right: 30px;">
+                <button  id="toggleSSIDsBtn" onclick="toggleSSIDs()" class="btn bg-primary-subtle">Show SSIDs</button>    
+            </div>
             <!-- Dark mode toggle button -->
             <div class="d-flex justify-content-end mt-2" style="margin-right: 30px;">
                 <button id="darkModeToggle" class="btn btn-secondary">Dark Mode</button>
             </div>
+
 
             <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
         </div>
@@ -125,7 +129,7 @@
             <div class="row">
                 <!-- Left half column - Device Analytics -->
                 <div class="col-sm-6 col-lg-6 p-2">
-                        <h3>Strongest Signals <button id="toggleSSIDsBtn" onclick="toggleSSIDs()" class="btn bg-primary-subtle">Show SSIDs</button></h3>
+                        <h3>Strongest Signals</h3>
                         <canvas id="strongestSignalsChart"></canvas>
                 </div>
 

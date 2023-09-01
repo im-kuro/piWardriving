@@ -87,6 +87,33 @@ document.addEventListener('DOMContentLoaded', function () {
                         // If no interface is chosen, show the modal
                         const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
                         interfaceModal.show();
+                    }else if(responseMessage.status == "error"){
+                        // If no interface is chosen, show the modal
+                        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+
+                        const alertContainer = document.getElementById('alertContainer');
+
+                        // Create a new alert element
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                        alertDiv.setAttribute('role', 'alert');
+
+                        // Add alert content
+                        alertDiv.innerHTML = `
+                            <strong>Error:</strong> ${responseMessage.message}<br>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        `;
+
+                        // Append the alert to the container
+                        alertContainer.appendChild(alertDiv);
+
+                        // Scroll to the top where the alert is displayed
+                        alertContainer.scrollIntoView();
+
+                        // Automatically close the alert after a certain time (e.g., 5 seconds)
+                        setTimeout(() => {
+                            alertDiv.remove();
+                        }, 10000);
                     }
                     if (response.ok) {
                         startAttackBtn.textContent = 'War Driving Started';
@@ -127,9 +154,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-
-      
-        
         startAttackBtn.disabled = false;
     });
 });

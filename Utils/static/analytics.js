@@ -22,7 +22,7 @@ async function updateDarkModeStyles() {
             body.classList.add('bg-secondary');
             topDiv.classList.add('text-white');
             body.classList.add('dark-mode');
-            listsInfo.classList.add('text-white');s
+            listsInfo.classList.add('text-white');
             darkmodeValue = true;
         } else {
             topDiv.classList.remove('text-white');
@@ -286,9 +286,16 @@ async function updateCharts() {
         const listItem = document.createElement('li');
         listItem.classList.add('network-info-item'); // Add a custom class for styling
 
-        const header = document.createElement('p');
+        const header = document.createElement('h4');
         header.classList.add('network-info-header'); // Add a custom class for styling
-        header.textContent = `SSID: ${network.ssid}, BSSID: ${network.bssid}`;
+        header.classList.add('ssid');
+        if (showSSIDs) {
+            header.textContent = `SSID: ${network.ssid}  |  BSSID: ${network.bssid}`;
+        }else{
+            header.textContent = 'SSID: Hidden SSID  |  BSSID: XX:XX:XX:XX:XX:XX:XX';
+        }
+        
+
 
         const details = document.createElement('p');
         details.classList.add('network-info-details'); // Add a custom class for styling
@@ -303,7 +310,7 @@ async function updateCharts() {
             const encodedBSSID = btoa(network.bssid);
             
             // Redirect to /attackNetwork with base64 encoded parameters
-            window.location.href = `/attackNetwork?ssid=${encodedSSID}&bssid=${encodedBSSID}`;
+            window.location.href = `/attackspecific?ssid=${encodedSSID}&bssid=${encodedBSSID}`;
         });
 
 
@@ -481,30 +488,13 @@ function toggleSSIDs() {
     showSSIDs = !showSSIDs; // Toggle the state
     // Check if the container element exists before trying to access its style
     const container = document.getElementById('strongestSignalsContainer');
-
-
     if (showSSIDs) {
         document.getElementById('toggleSSIDsBtn').innerText = 'Hide SSIDs';
     } else {
         document.getElementById('toggleSSIDsBtn').innerText = 'Show SSIDs';
     }
 
-    updateLists(); // Call the list update function
     updateCharts(); // Call the chart update function
 
 }
-
-function updateLists() {
-    const networkInfoList = document.getElementById('networkInfoList');
-    const handshakeInfoList = document.getElementById('handshakeInfoList');
-    
-    const ssids = document.querySelectorAll('.ssid'); // Assuming the SSID elements have a class of "ssid"
-    console.log(ssids)
-    for (const ssid of ssids) {
-        ssid.style.display = showSSIDs ? 'block' : 'none';
-    }
-}
-
-
-
 

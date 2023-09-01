@@ -1,6 +1,6 @@
 
 from Utils import tools, helpers
-import subprocess, threading,json, argparse
+import subprocess, threading,json, argparse, os
 
 from Utils import bettercap
 
@@ -11,6 +11,9 @@ argparseObj = argparse.ArgumentParser()
 argparseObj.add_argument("-i", "--install", help="Install the tools, setup ap and web interface", action="store_true")
 argparseObj.add_argument("-u", "--uninstall", help="Uninstall everything from your system", action="store_true")
 
+#if os.geteuid() != 0:
+#    msg = "[sudo] password for %u:"
+#    ret = subprocess.check_call("sudo -v -p '%s'" % msg, shell=True)
 
 
 def run_web_handler():

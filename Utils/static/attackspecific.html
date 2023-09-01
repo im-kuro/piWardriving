@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wardriving Tool</title>
+    <!-- Add Bootstrap CSS link -->
+    <link rel="stylesheet" href="Utils/static/bootstrap-5.3.1-dist/css/bootstrap.min.css">
+</head>
+<body class="">
+    <div class="modal" id="interfaceModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="interfaceForm">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Select Interface</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p>Please select the interface you want to use:</p>
+                        <select class="form-select" id="interfaceSelect" aria-label="Default select example">
+                            {% for interface_name, interface_data in deviceInfo.interfaces.items() %}
+                                <option value="{{ interface_data.idx }}">{{ interface_data.interfaceName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+	<div class="row">
+
+
+
+
+
+
+	</div>
+
+	<div class="row">
+
+
+
+
+
+	</div>
+
+
+</body>
+</html>

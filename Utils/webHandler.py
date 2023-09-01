@@ -1,12 +1,17 @@
 from sanic import Sanic
 from sanic.response import json, html
-import platform,socket,re,uuid,psutil, asyncio
+import platform,socket,re,uuid,psutil, asyncio, base64
 from jinja2 import Environment, FileSystemLoader
+
+# Local imports
 import tools, helpers
 import bettercap
 
+
 app = Sanic("WardrivingTool")
 app.static('Utils/static/', 'Utils/static/', directory_view=True, name="static")  # Assuming your static files are in a 'static' folder
+
+
 
 # Configure Jinja2 template environment
 template_dir = 'Utils/static/'  # Path to your template directory
@@ -24,6 +29,8 @@ if helpers.database().readFromDB("settings") is not None:
 else: app.ctx.interface = None; app.ctx.interfaceName = None
 # Shared variable to indicate whether the loop should run or not
 loop_running = False
+
+
 
 """
 
@@ -67,6 +74,22 @@ async def attack(request):
 @app.route("/analytics", methods=["GET"])
 async def analytics(request):
     template = env.get_template('analytics.html')
+    rendered_template = template.render(deviceInfo={
+        "interfaces": app.ctx.interfaces,
+        "interfaceInfo": {"idx": app.ctx.interface, "name": app.ctx.interfaceName}
+    })
+    return html(rendered_template)
+
+@app.route("/attackspecific", methods=["GET"])
+async def attackSpecific(request):
+    try:
+        ssid = base64.b64decode(request.args.get('ssid')).decode('utf-8')
+        bssid = base64.b64decode(request.args.get('bssid')).decode('utf-8')
+    except Exception as e:
+        ssid = "Invalid Base64 encoding"
+        bssid = "Invalid Base64 encoding"
+
+    template = env.get_template('attackspecific.html')
     rendered_template = template.render(deviceInfo={
         "interfaces": app.ctx.interfaces,
         "interfaceInfo": {"idx": app.ctx.interface, "name": app.ctx.interfaceName}
@@ -122,15 +145,21 @@ async def getSettings(request):
         return json({"status": "error", "message": str(e)})
 
 
-
 # async local func handler so we can use global variables
 async def wardrivingLoop(actionCall: str):
     global loop_running
+    interface_name = app.ctx.interfaceName
+    
     while loop_running:
-        
+        # Check if the interface is already in monitor mode
+        current_mode = await tools.get_interface_mode(interface_name)
+        if current_mode != "Monitor":
+            monitorModeStatus = await tools.set_monitor_mode(interface_name)
+            if monitorModeStatus["status"] == "error":
+                return {"status": "error", "message": monitorModeStatus["message"]}
+            
         networks = await tools.scan_wifi_networks(app.ctx.interface)
-
-        await tools.deauthHandler(bettercap,app.ctx.interfaceName, networks, actionCall)
+        await tools.deauthHandler(bettercap, interface_name, networks, actionCall)
 
         await asyncio.sleep(5)  # Adjust the sleep interval as needed
 
@@ -152,8 +181,9 @@ async def startWardrive(request):
             # Start the loop by setting the shared variable to True
             loop_running = True
             # Create an asyncio task to run the loop function
-            status = asyncio.create_task(wardrivingLoop(action))
-
+            status = await asyncio.create_task(wardrivingLoop(action))
+            if status["status"] == "error":
+                return json({"status": "error", "message": "invalidAction", "error": status["message"]})
             return json({"status": "Loop started"})
         else:
             return json({"status": "Loop already running"})

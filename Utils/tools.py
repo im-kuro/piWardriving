@@ -23,6 +23,44 @@ def showInterfaces() -> json:
 	return interfacesJson
 
 
+async def get_interface_mode(interface_name):
+    try:
+        result = subprocess.run(["iwconfig", interface_name], capture_output=True, text=True, check=True)
+        output_lines = result.stdout.splitlines()
+        for line in output_lines:
+            if "Mode:" in line:
+                mode = line.split("Mode:")[1].split()[0]
+                return mode
+        return "Unknown"
+    except subprocess.CalledProcessError as e:
+        print("Error getting interface mode:", e)
+        return "Error"
+
+# Function to set interface to monitor mode
+async def set_monitor_mode(interface):
+	try:
+		try:
+			setInterfaceDown = subprocess.check_output(["sudo", "ifconfig", interface, "down"], check=True)
+		except Exception as e:
+			print("ERROR setting interface down:", e)
+			return {"status": "error", "message": str(e)}
+		try:
+			setModeMonitor = subprocess.check_output(["sudo", "iwconfig", interface, "mode", "monitor"], check=True)
+		except Exception as e:
+			print("ERROR setting monitor mode:", e)
+			return {"status": "error", "message": str(e)}
+		try:
+			setInterfaceUp = subprocess.check_output(["sudo", "ifconfig", interface, "up"], check=True)
+		except Exception as e:
+			print("ERROR setting interface up:", e)
+			return {"status": "error", "message": str(e)}
+		print(f"Interface {interface} set to monitor mode.")
+	except subprocess.CalledProcessError as e:
+		print("Error setting monitor mode:", e)
+  
+  
+  
+        
 async def deauthHandler(bettercap, interface: int, networks, action) -> dict:
 	bcap = bettercap.Client(iface=interface)
 	bcap.recon()
