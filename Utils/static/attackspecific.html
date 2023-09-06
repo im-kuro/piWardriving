@@ -30,6 +30,39 @@
         </div>
     </div>
 
+
+
+    <div>
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-sm navbar-dark navbar-text bg-dark">
+            <div class="container-fluid">
+                <img src="Utils/static/Kuro2ToneRedNOBG.png" style="height: 95px; width: 95px">
+                <a class="navbar-brand" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Wardriving Tool</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/" style="font-weight: 1000;">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/attack">Attack</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/analytics">Analytics</a>
+                        </li>
+
+                    </ul>
+                </div>
+                        <!-- Dark mode toggle button -->
+                <div class="d-flex justify-content-end mt-2" style="margin-right: 30px;">
+                    <button id="darkModeToggle" class="btn btn-secondary">Dark Mode</button>
+                </div>
+                <h5 class="my-auto" id="selectedInterface" value="{{ deviceInfo['interfaceInfo']['idx'] }}" >{{ deviceInfo["interfaceInfo"]["name"] }}</h5>
+            </div>
+        </nav>
+    </div>
 	<div class="row">
 
 

@@ -1,19 +1,27 @@
 
-import pywifi, subprocess, json, time
+import pywifi, subprocess, json
 from pywifi import const
 import psutil, pywifi
 from gpiozero import CPUTemperature
 import asyncio
-from scapy.all import ARP, Ether, srp
+
 
 
 wifi = pywifi.PyWiFi()
 
 
 
-def __installNeeded__():
-	subprocess.run(["sudo", "apt-get", "install", "hostapd", "dnsmasq", "bettercap"])
 
+def __installNeeded__():
+    try:
+        # Run the installation command
+        subprocess.run(["sudo", "apt-get", "install", "hostapd", "dnsmasq", "aircrack-ng"], check=True)
+        return {"status": "success", "message": "Packages installed successfully"}
+    except subprocess.CalledProcessError as e:
+        return {"status": "error", "message": f"Error during package installation: {e}", "error": str(e)}
+    except Exception as e:
+        return {"status": "error", "message": f"An unexpected error occurred: {e}", "error": str(e)}
+    
 
 def showInterfaces() -> json:
 	interfaces = wifi.interfaces()
@@ -35,47 +43,8 @@ async def get_interface_mode(interface_name):
     except subprocess.CalledProcessError as e:
         print("Error getting interface mode:", e)
         return "Error"
-
-# Function to set interface to monitor mode
-async def set_monitor_mode(interface):
-	try:
-		try:
-			setInterfaceDown = subprocess.check_output(["sudo", "ifconfig", interface, "down"], check=True)
-		except Exception as e:
-			print("ERROR setting interface down:", e)
-			return {"status": "error", "message": str(e)}
-		try:
-			setModeMonitor = subprocess.check_output(["sudo", "iwconfig", interface, "mode", "monitor"], check=True)
-		except Exception as e:
-			print("ERROR setting monitor mode:", e)
-			return {"status": "error", "message": str(e)}
-		try:
-			setInterfaceUp = subprocess.check_output(["sudo", "ifconfig", interface, "up"], check=True)
-		except Exception as e:
-			print("ERROR setting interface up:", e)
-			return {"status": "error", "message": str(e)}
-		print(f"Interface {interface} set to monitor mode.")
-	except subprocess.CalledProcessError as e:
-		print("Error setting monitor mode:", e)
   
   
-  
-        
-async def deauthHandler(bettercap, interface: int, networks, action) -> dict:
-	bcap = bettercap.Client(iface=interface)
-	bcap.recon()
-	await asyncio.sleep(5)
-
-	if action == "monitorOnly":
-		for x in bcap.getPairs():
-			print(x)
-	elif action == "logNetworks":
-		pass
-	elif action == "captureHandshakes":
-		pass
-	else:
-		return {"status": "error", "message": "invalidAction"}
-
 
 def getInterfaceUsage(interface: int) -> dict:
 	def get_size(bytes):

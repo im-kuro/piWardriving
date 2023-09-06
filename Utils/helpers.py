@@ -1,5 +1,5 @@
 from colorama import Fore, Style, init
-import getpass, os, json
+import getpass, json
 
 
 # the class for the input/output functions

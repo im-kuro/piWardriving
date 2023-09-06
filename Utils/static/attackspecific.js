@@ -1,5 +1,75 @@
 
 
+// Dark mode toggle logic
+const darkModeToggle = document.getElementById('darkModeToggle');
+const body = document.body;
+
+var darkmodeValue = false;
+// Function to update dark mode styles based on API response
+async function updateDarkModeStyles() {
+    try {
+        // Make API call to check if dark mode is enabled
+        const response = await fetch('/getsettings', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const data = await response.json();
+        console.log('Dark mode API response:', data);
+
+        // Update body style and class based on dark mode status
+        if (data.settings.darkmode) {
+            body.classList.add('bg-secondary');
+            topDiv.classList.add('text-white');
+
+            darkmodeValue = true;
+        } else {
+            topDiv.classList.remove('text-white');
+            body.classList.remove('bg-secondary');
+
+            darkmodeValue = false;
+        }
+    } catch (error) {
+        console.error('Error updating dark mode styles:', error);
+    }
+}
+
+// Call the function to update styles on initial load
+updateDarkModeStyles();
+
+
+darkModeToggle.addEventListener('click', async () => {
+    try {
+        console.log('Dark mode toggle clicked');
+        // Get current dark mode status
+        const isDarkMode = body.classList.contains('dark-mode');
+
+        // Prepare payload for API call
+        const darkModePayload = {
+            call: 'darkmode',
+            payload: !isDarkMode
+        };
+
+        // Make API call to set dark mode status
+        const setSettingsResponse = await fetch('/setsettings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(darkModePayload)
+        });
+        const setData = await setSettingsResponse.json();
+        console.log('Dark mode set response:', setData);
+
+        // Update styles after toggling
+        updateDarkModeStyles();
+    } catch (error) {
+        console.error('Error toggling dark mode:', error);
+    }
+});
+
+
 
 
 

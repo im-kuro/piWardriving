@@ -2,10 +2,10 @@ from sanic import Sanic
 from sanic.response import json, html
 import platform,socket,re,uuid,psutil, asyncio, base64
 from jinja2 import Environment, FileSystemLoader
-
+import aircrack
 # Local imports
 import tools, helpers
-import bettercap
+
 
 
 app = Sanic("WardrivingTool")
@@ -154,15 +154,29 @@ async def wardrivingLoop(actionCall: str):
         # Check if the interface is already in monitor mode
         current_mode = await tools.get_interface_mode(interface_name)
         if current_mode != "Monitor":
-            monitorModeStatus = await tools.set_monitor_mode(interface_name)
-            if monitorModeStatus["status"] == "error":
-                return {"status": "error", "message": monitorModeStatus["message"]}
             
-        networks = await tools.scan_wifi_networks(app.ctx.interface)
-        await tools.deauthHandler(bettercap, interface_name, networks, actionCall)
+            monitorModeStatus = aircrack.aircrackWrapper.configInterface(current_mode.lower())
+            if monitorModeStatus["status"] == "error":
+                return monitorModeStatus # throw error back up to the main loop
+            elif monitorModeStatus["status"] == "success":
+                pass
+        
+        elif current_mode == "Monitor":
+            pass
+    
+        if actionCall == "monitorOnly":
+            
+            networks = await aircrack.aircrackWrapper.dump(app.ctx.interface)
+            
+            for network in networks.values():
+                print(network["ssid"])
 
-        await asyncio.sleep(5)  # Adjust the sleep interval as needed
-
+            await asyncio.sleep(5)  # Adjust the sleep interval as needed
+        if actionCall == "logNetworks":
+            pass
+        if actionCall == "captureHandshakes":
+            pass
+        
 
 @app.route('/startwardriving', methods=["POST"])
 async def startWardrive(request):
@@ -183,7 +197,7 @@ async def startWardrive(request):
             # Create an asyncio task to run the loop function
             status = await asyncio.create_task(wardrivingLoop(action))
             if status["status"] == "error":
-                return json({"status": "error", "message": "invalidAction", "error": status["message"]})
+                return json({"status": "error", "message": "invalidAction", "response": status})
             return json({"status": "Loop started"})
         else:
             return json({"status": "Loop already running"})

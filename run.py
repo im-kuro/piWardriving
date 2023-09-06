@@ -1,8 +1,6 @@
 
 from Utils import tools, helpers
-import subprocess, threading,json, argparse, os
-
-from Utils import bettercap
+import subprocess, threading, argparse
 
 helpersObj = helpers.IOFuncs.Default()
 
@@ -22,7 +20,12 @@ def run_web_handler():
 def main():
 	helpersObj.printInfo("Kuros Wardriving Tool")
 	if argparseObj.parse_args().install:
-		helpersObj.printInfo("Installing tools")
+		helpersObj.printInfo("Installing tools...")
+		installRes = tools.__installNeeded__()["status"]
+		if installRes == "error":
+			helpersObj.printError(f"Error installing packages | Output => {installRes}")
+		else:
+			helpersObj.printSuccess("Packages installed successfully")
 	if argparseObj.parse_args().uninstall:
 		helpersObj.printInfo("Uninstalling tools")
   

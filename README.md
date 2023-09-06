@@ -10,28 +10,6 @@ work along with adding bug fixes and cleaning up the code. soon we will have war
 
 ## Installation
 
-### Install go & bettercap
-
-```bash
-sudo wget -q -O - https://archive.kali.org/archive-key.asc | sudo apt-key add
-```
-edit the sources.list file
-```bash
-sudo nano /etc/apt/sources.list
-```
-add the following line to the file
-```bash
-deb http://http.kali.org/kali kali-rolling main contrib non-free
-```
-update
-```bash
-sudo apt update
-```
-get bettercap
-```bash
-sudo apt install bettercap
-```
-
 ### Clone the repo using git.
 
 ```bash
@@ -42,6 +20,12 @@ install py libs.
 ```bash
 pip install -r requirements.txt
 ```
+
+install tools
+```bash
+python run.py --install
+```
+
 
 Run the server (please note future installs will be easier)
 ```bash
