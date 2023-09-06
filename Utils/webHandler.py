@@ -167,6 +167,8 @@ async def wardrivingLoop(actionCall: str, interfaceName: str = app.ctx.interface
         if actionCall == "monitorOnly":
             
             networks = await aircrack.aircrackWrapper.dump(app.ctx.interface)
+            if networks["status"] == "error":
+                return networks
             
             for network in networks.values():
                 print(network["ssid"])
