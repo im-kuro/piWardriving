@@ -33,7 +33,7 @@ class aircrackWrapper:
 			airodump_process = subprocess.Popen(airodump_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 			# Wait for the specified scan_duration
-			time.sleep(scan_duration)
+			await asyncio.sleep(scan_duration)
 
 			# Terminate airodump-ng
 			airodump_process.terminate()

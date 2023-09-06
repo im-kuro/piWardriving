@@ -38,7 +38,7 @@ async def get_interface_mode(interface_name):
         for line in output_lines:
             if "Mode:" in line:
                 mode = line.split("Mode:")[1].split()[0]
-                return mode
+                return mode.lower()
         return "Unknown"
     except subprocess.CalledProcessError as e:
         print("Error getting interface mode:", e)

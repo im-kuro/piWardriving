@@ -153,32 +153,35 @@ async def wardrivingLoop(actionCall: str, interfaceName: str = app.ctx.interface
     while loop_running:
         # Check if the interface is already in monitor mode
         current_mode = await tools.get_interface_mode(interfaceName)
-        if current_mode != "Monitor":
-            
-            monitorModeStatus = aircrack.aircrackWrapper.configInterface(interfaceName, current_mode.lower())
-            if monitorModeStatus["status"] == "error":
-                return monitorModeStatus # throw error back up to the main loop
-            elif monitorModeStatus["status"] == "success":
-                pass
+        helpers.IOFuncs.Default.printInfo(f"Current mode: {current_mode}")
         
-        elif current_mode == "Monitor":
+        if current_mode != "monitor":
+            helpers.IOFuncs.Default.printInfo("Changing interface to monitor mode")
+            
+            monitorModeStatus = aircrack.aircrackWrapper.configInterface(interfaceName, current_mode)
+            
+            return monitorModeStatus # throw error back up to the main loop
+        
+        elif current_mode == "monitor":
             pass
     
         if actionCall == "monitorOnly":
             
-            networks = await aircrack.aircrackWrapper.dump(app.ctx.interface)
+            networks = await aircrack.aircrackWrapper.dump(interfaceName)
             if networks["status"] == "error":
                 return networks
             
             for network in networks.values():
                 print(network["ssid"])
 
-            await asyncio.sleep(5)  # Adjust the sleep interval as needed
+           
         if actionCall == "logNetworks":
             pass
+        
         if actionCall == "captureHandshakes":
             pass
         
+        await asyncio.sleep(5)  # Adjust the sleep interval as needed
 
 @app.route('/startwardriving', methods=["POST"])
 async def startWardrive(request):
