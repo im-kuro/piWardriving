@@ -107,10 +107,10 @@ class aircrackWrapper:
 			if mode.lower() == "managed":
 				commands = [
 			        ["sudo", "ifconfig", interface, "down"],
-			        ["sudo", "iwconfig", interface, "mode", "managed"],
+			        ["sudo", "iwconfig", interface, "mode", "monitor"],
 			        ["sudo", "ifconfig", interface, "up"],
 			    ]
-			elif mode.lower() == "monitor":
+			elif mode.lower() == "managed":
 				commands = [
 			        ["sudo", "ifconfig", interface, "down"],
 			        ["sudo", "iwconfig", interface, "mode", "monitor"],

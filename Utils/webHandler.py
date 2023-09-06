@@ -149,21 +149,20 @@ async def getSettings(request):
 async def wardrivingLoop(actionCall: str, interfaceName: str = app.ctx.interfaceName):
     global loop_running
     
+    # Check if the interface is already in monitor mode
+    current_mode = await tools.get_interface_mode(interfaceName)
+    print(f"Current mode: {current_mode}")
+    
+    if current_mode != "monitor":
+        print("Changing interface to monitor mode")
+        return aircrack.aircrackWrapper.configInterface(interfaceName, current_mode)
+
+    elif current_mode == "monitor":
+        pass
+    
     
     while loop_running:
-        # Check if the interface is already in monitor mode
-        current_mode = await tools.get_interface_mode(interfaceName)
-        helpers.IOFuncs.Default.printInfo(f"Current mode: {current_mode}")
         
-        if current_mode != "monitor":
-            helpers.IOFuncs.Default.printInfo("Changing interface to monitor mode")
-            
-            monitorModeStatus = aircrack.aircrackWrapper.configInterface(interfaceName, current_mode)
-            
-            return monitorModeStatus # throw error back up to the main loop
-        
-        elif current_mode == "monitor":
-            pass
     
         if actionCall == "monitorOnly":
             
