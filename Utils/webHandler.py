@@ -146,7 +146,7 @@ async def getSettings(request):
 
 
 # async local func handler so we can use global variables
-async def wardrivingLoop(actionCall: str, interfaceName: str = None):
+async def wardrivingLoop(actionCall: str, interfaceName: str = app.ctx.interfaceName):
     global loop_running
     
     

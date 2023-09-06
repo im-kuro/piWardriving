@@ -46,19 +46,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-// code for dynamic population of interface options and form submission
 document.addEventListener('DOMContentLoaded', function () {
-    // Populate the interface selection dropdown based on data
-    const interfaceSelect = document.getElementById('interfaceSelect');
     // Handle form submission
     const attackSetupForm = document.getElementById('attackSetupForm');
     const startAttackBtn = document.getElementById('startAttackBtn');
     let isWarDrivingStarted = false; // Track the war driving state
-    
+
     attackSetupForm.addEventListener('submit', async (event) => {
         event.preventDefault(); // Prevent default form submission
-        const selectedInterfaceIdx = interfaceSelect.value;
-        const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
+
+        // Get the selected interface index
+        const selectedInterface = document.querySelector('input[name="selectedInterface"]:checked');
+
+        if (!selectedInterface) {
+            alert('Please select an interface');
+            return;
+        }
+        const selectedInterfaceIdx = selectedInterface.value;
+        const selectedInterfaceName = document.querySelector('label[for="' + selectedInterface.id + '"]').textContent;
 
 
         const selectedActionInput = document.querySelector('input[name="attackAction"]:checked');
@@ -88,8 +93,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
                         interfaceModal.show();
                     }else if(responseMessage.status == "error"){
-                        // If no interface is chosen, show the modal
-                        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
 
                         const alertContainer = document.getElementById('alertContainer');
 

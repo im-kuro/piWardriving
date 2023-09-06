@@ -75,14 +75,15 @@
                 </div>
                 <div class="">
                     <form id="attackSetupForm">
-                        <div class="mb-3">
-                            <label for="interfaceSelect" class="form-label">Select Interface</label>
-                            <select class="form-select" aria-label="Select Interface">
-                                {% for interface_name, interface_data in deviceInfo.interfaces.items() %}
-                                    <option value="{{ interface_data.idx }}" id="interfaceSelect">{{ interface_data.interfaceName }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                    <div class="mb-4">
+                        <label for="interfaceSelect" class="form-label">Select Interface</label>
+                        {% for interface_name, interface_data in deviceInfo.interfaces.items() %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="selectedInterface" id="interface_{{ interface_data.idx }}" value="{{ interface_data.idx }}">
+                                <label class="form-check-label" for="interface_{{ interface_data.idx }}">{{ interface_data.interfaceName }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
                         <div class="mb-4">
                             <label class="form-check-label">Attack Action:</label>
 							<div class="form-check">
