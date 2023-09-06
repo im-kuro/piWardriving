@@ -2,10 +2,8 @@ import subprocess, time, json, os, asyncio
 
 
 class aircrackWrapper:
-    def __init__(self):
-        pass
-    
-    async def deauth(self, interface: str, ap: str, st: str, count: int):
+
+    async def deauth(interface: str, ap: str, st: str, count: int):
         try:
             # Define the aireplay-ng command
             deauth_command = [
@@ -25,7 +23,7 @@ class aircrackWrapper:
             return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
 
         
-    def dump(self, interface: str, scan_duration: int = 5):
+    def dump(interface: str, scan_duration: int = 5):
         try:
             # Define the airodump-ng command
             airodump_command = ["sudo", "airodump-ng", "--output-format", "json", "--write", "output", interface]
@@ -63,7 +61,7 @@ class aircrackWrapper:
             return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
 
 
-    async def captureHandshake(self, interface: str, bssid: str, channel: int, timeout: int = 15):
+    async def captureHandshake(interface: str, bssid: str, channel: int, timeout: int = 15):
         try:
             # Define the airodump-ng command to target a specific network and capture a handshake
             output_filename = f"{bssid}.cap"  # Define the output filename
@@ -101,7 +99,7 @@ class aircrackWrapper:
 
     
     # Every time you call, it will update the interface mode (monitor / managed)
-    def configInterface(self, interface: str, mode: str):
+    def configInterface(interface: str, mode: str):
         try:
             if mode.lower() == "managed":
                 commands = [

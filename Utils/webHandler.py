@@ -146,16 +146,16 @@ async def getSettings(request):
 
 
 # async local func handler so we can use global variables
-async def wardrivingLoop(actionCall: str):
+async def wardrivingLoop(actionCall: str, interfaceName: str = None):
     global loop_running
-    interface_name = app.ctx.interfaceName
+    
     
     while loop_running:
         # Check if the interface is already in monitor mode
-        current_mode = await tools.get_interface_mode(interface_name)
+        current_mode = await tools.get_interface_mode(interfaceName)
         if current_mode != "Monitor":
             
-            monitorModeStatus = aircrack.aircrackWrapper.configInterface(current_mode.lower())
+            monitorModeStatus = aircrack.aircrackWrapper.configInterface(interfaceName, current_mode.lower())
             if monitorModeStatus["status"] == "error":
                 return monitorModeStatus # throw error back up to the main loop
             elif monitorModeStatus["status"] == "success":
@@ -182,9 +182,12 @@ async def wardrivingLoop(actionCall: str):
 async def startWardrive(request):
     if app.ctx.interface is None:
         return json({"status": "error", "message": "noInterfaceSelected"})
+    
     global loop_running
+    
     action = request.json["action"]
-
+    interfaceName = request.json["interfaceName"]
+    
     if action == "terminate":
         # Stop the loop by setting the shared variable to False
         loop_running = False
@@ -195,7 +198,7 @@ async def startWardrive(request):
             # Start the loop by setting the shared variable to True
             loop_running = True
             # Create an asyncio task to run the loop function
-            status = await asyncio.create_task(wardrivingLoop(action))
+            status = await asyncio.create_task(wardrivingLoop(action, interfaceName))
             if status["status"] == "error":
                 return json({"status": "error", "message": "invalidAction", "response": status})
             return json({"status": "Loop started"})
