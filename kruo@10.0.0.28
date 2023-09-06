@@ -167,7 +167,7 @@ async def wardrivingLoop(actionCall: str, interfaceName: str = app.ctx.interface
                 return networks
             
             for network in networks.values():
-                print(network["networks"]["ssid"])
+                print(network["ssid"])
 
            
         if actionCall == "logNetworks":

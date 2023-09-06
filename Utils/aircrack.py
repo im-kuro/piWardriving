@@ -27,33 +27,28 @@ class aircrackWrapper:
 	async def dump(interface: str, scan_duration: int = 5):
 		try:
 			# Define the airodump-ng command
-			airodump_command = ["sudo", "airodump-ng", "--output-format", "csv", "--write", "networks", interface]
+			airodump_command = ["sudo", "airodump-ng", "--output-format", "json", interface]
 
 			# Start airodump-ng in the background
 			airodump_process = subprocess.Popen(airodump_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-			# Wait for the specified scan_duration
+			# Check if the command was successful
+			if airodump_process.returncode == 0:
+				airodump_output = airodump_process.stdout.splitlines()
+			else:
+				print("Error running airodump-ng command")
+				exit(1)
+   			# Wait for the specified scan_duration
 			await asyncio.sleep(scan_duration)
 
 			# Terminate airodump-ng
 			airodump_process.terminate()
 
-			# Read the captured CSV data from the file
-			with open("networks.csv", "r") as csv_file:
-				csv_reader = csv.DictReader(csv_file)
-				data = list(csv_reader)
+			# Capture and decode the command output
+			output, _ = airodump_process.communicate()
 
-			# Extract and format the relevant information
-			parsed_data = {}
-			for entry in data:
-				ssid = entry["ESSID"]
-				channel = entry["channel"]
-				bssid = entry["BSSID"]
-				parsed_data[ssid] = {
-					"channel": channel,
-					"ssid": ssid,
-					"bssid": bssid
-				}
+			# Parse the JSON output
+			parsed_data = json.loads(output)
+
 
 			return {"status": "success", "message": "Data parsed and formatted", "networks": parsed_data}
 
@@ -102,7 +97,7 @@ class aircrackWrapper:
 
     
     # Every time you call, it will update the interface mode (monitor / managed)
-	def configInterface(interface: str, mode: str):
+	async def configInterface(interface: str, mode: str):
 		try:
 			if mode.lower() == "managed":
 				commands = [
@@ -110,10 +105,10 @@ class aircrackWrapper:
 			        ["sudo", "iwconfig", interface, "mode", "monitor"],
 			        ["sudo", "ifconfig", interface, "up"],
 			    ]
-			elif mode.lower() == "managed":
+			elif mode.lower() == "monitor":
 				commands = [
 			        ["sudo", "ifconfig", interface, "down"],
-			        ["sudo", "iwconfig", interface, "mode", "monitor"],
+			        ["sudo", "iwconfig", interface, "mode", "managed"],
 			        ["sudo", "ifconfig", interface, "up"],
 			    ]
 			else:
