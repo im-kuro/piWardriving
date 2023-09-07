@@ -154,12 +154,12 @@ async def wardrivingLoop(actionCall: str, interfaceName: str = app.ctx.interface
     print(f"Current mode: {current_mode}")
     
     if current_mode != "monitor":
-        # If not, change it to monitor mode
+        print("Interface is not in monitor mode")
+        # If not, change it to monitor mode 
         await aircrack.aircrackWrapper.configInterface(interfaceName, "monitor")
 
     
     while loop_running:
-    
         if actionCall == "monitorOnly":
             
             networks = await aircrack.aircrackWrapper.dump(interfaceName)
@@ -181,6 +181,8 @@ async def wardrivingLoop(actionCall: str, interfaceName: str = app.ctx.interface
     # If the loop is stopped, return the interface to its original mode 
     if current_mode == "monitor":
         return await aircrack.aircrackWrapper.configInterface(interfaceName, current_mode)
+
+
 
 @app.route('/startwardriving', methods=["POST"])
 async def startWardrive(request):
@@ -228,9 +230,7 @@ async def getNetworks(request):
         return json({"status": "error", "message": "noInterfaceSelected"})
     networkRes = await tools.scan_wifi_networks(app.ctx.interface)
 
-
     savedNetworks = helpers.database().readFromDB("savedNetworks")
-    
     
     for network in networkRes.values():
         if network["ssid"] in savedNetworks:

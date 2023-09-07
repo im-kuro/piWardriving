@@ -21,36 +21,35 @@ class aircrackWrapper:
 		except Exception as e:
 			return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
 
-        
-
-
+			
+   
+   
 	async def dump(interface: str, scan_duration: int = 5):
 		try:
 			# Define the airodump-ng command
-			airodump_command = ["sudo", "airodump-ng", "--output-format", "json", interface]
+			cmd = [
+			    "sudo", "airodump-ng", "--output-format", "csv", "-w", "Utils/output", interface
+			]			
+			# Start airodump-ng to capture network data for the specified duration
+			process = await asyncio.create_subprocess_exec(
+			    *cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+			)			
+			await asyncio.sleep(scan_duration)		
 
-			# Start airodump-ng in the background
-			airodump_process = subprocess.Popen(airodump_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-			# Check if the command was successful
-			if airodump_process.returncode == 0:
-				airodump_output = airodump_process.stdout.splitlines()
-			else:
-				print("Error running airodump-ng command")
-				exit(1)
-   			# Wait for the specified scan_duration
-			await asyncio.sleep(scan_duration)
+			csv_filename = "Utils/output-01.csv"
+   
+            # Read the captured data from the CSV file into a list of dictionaries
+			with open(csv_filename, "r") as csv_file:
+				csv_reader = csv.DictReader(csv_file)
+				data = list(csv_reader)
 
-			# Terminate airodump-ng
-			airodump_process.terminate()
+			# Remove the CSV file
+			os.remove(csv_filename)
 
-			# Capture and decode the command output
-			output, _ = airodump_process.communicate()
+			# Convert the data to JSON format
+			json_data = json.dumps(data, indent=4)
 
-			# Parse the JSON output
-			parsed_data = json.loads(output)
-
-
-			return {"status": "success", "message": "Data parsed and formatted", "networks": parsed_data}
+			return {"status": "success", "message": "Network data captured", "data": json_data}
 
 		except subprocess.CalledProcessError as e:
 			return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
