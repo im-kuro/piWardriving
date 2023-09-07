@@ -166,7 +166,7 @@ async def wardrivingLoop(actionCall: str, interfaceName: str = app.ctx.interface
             if networks["status"] == "error":
                 return networks
             
-            for network in networks.values():
+            for network in networks:
                 print(network["networks"]["ssid"])
 
            
@@ -224,33 +224,31 @@ async def getSaved(request):
     if request.method == "GET": return json({"savedNetworks": helpers.database().readFromDB("savedNetworks")})
     else: return json({"status": "error", "message": "Invalid request method"})
 
+
 @app.route('/networks', methods=['GET'])
 async def getNetworks(request):
     if app.ctx.interface is None:
         return json({"status": "error", "message": "noInterfaceSelected"})
-    networkRes = await tools.scan_wifi_networks(app.ctx.interface)
-
+    networkRes = await aircrack.aircrackWrapper.dump(app.ctx.interface)
+    
+    if networkRes["status"] == "error":
+        return json({"status": "error", "message": "invalidAction", "response": networkRes})
+    
     savedNetworks = helpers.database().readFromDB("savedNetworks")
     
+    # checking for 
     for network in networkRes.values():
         if network["ssid"] in savedNetworks:
-            network["saved"] = True
+            continue
         else:
             savedNetworks[network["ssid"]] = network  
             helpers.database().writeToDB("savedNetworks", savedNetworks) 
-            network["saved"] = False
+            continue
             
     networkUsage = tools.getInterfaceUsage(app.ctx.interface)
             
-
-    unknown = 0
-    unknownSaved = 0
-    WPANetworks = 0
-    WPA2Networks = 0
-    WEPNetworks = 0
-    savedWPANetworks = 0
-    savedWPA2Networks = 0
-    savedWEPNetworks = 0
+    # define variables for use in the for loop
+    unknown = 0; unknownSaved = 0; WPANetworks = 0; WPA2Networks = 0; WEPNetworks = 0; savedWPANetworks = 0; savedWPA2Networks = 0; savedWEPNetworks = 0
 
     networkCount = 0
     savedNetworksCount = 0

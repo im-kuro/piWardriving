@@ -2,6 +2,21 @@ import subprocess, time, json, os, asyncio, csv
 
 
 class aircrackWrapper:
+	async def getInterfaceMode(interface_name):
+		try:
+			result = subprocess.run(["iwconfig", interface_name], capture_output=True, text=True, check=True)
+			output_lines = result.stdout.splitlines()
+			for line in output_lines:
+				if "Mode:" in line:
+					mode = line.split("Mode:")[1].split()[0]
+					return mode.lower()
+			return "Unknown"
+		except subprocess.CalledProcessError as e:
+			print("Error getting interface mode:", e)
+			return "Error"
+	
+    
+    
 	async def deauth(interface: str, ap: str, st: str, count: int):
 		try:
             # Define the aireplay-ng command

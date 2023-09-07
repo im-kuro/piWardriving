@@ -31,20 +31,8 @@ def showInterfaces() -> json:
 	return interfacesJson
 
 
-async def get_interface_mode(interface_name):
-    try:
-        result = subprocess.run(["iwconfig", interface_name], capture_output=True, text=True, check=True)
-        output_lines = result.stdout.splitlines()
-        for line in output_lines:
-            if "Mode:" in line:
-                mode = line.split("Mode:")[1].split()[0]
-                return mode.lower()
-        return "Unknown"
-    except subprocess.CalledProcessError as e:
-        print("Error getting interface mode:", e)
-        return "Error"
-  
-  
+
+
 
 def getInterfaceUsage(interface: int) -> dict:
 	def get_size(bytes):
@@ -88,26 +76,6 @@ def get_cpu_usage():
 		print(f"Error fetching CPU usage: {e}")
 		return None
 
-
-async def scan_wifi_networks(interface: int):
-	if interface is None:
-		print("!CRITICAL! No interface selected, please select one")
-		return None
-	iface = wifi.interfaces()[int(interface)]
-	iface.scan()
-	# give time for scanning
-	await asyncio.sleep(5)
-	scan_results = iface.scan_results()
-	network_info = {}
-	for result in scan_results:
-		network_info[f"{result.ssid}"]={
-			"ssid": result.ssid,
-			"bssid": result.bssid,
-			"signalStrength": result.signal,
-			"encryption": result.akm
-		}
-
-	return network_info
 
 
 def setupAP(interface:int=0):

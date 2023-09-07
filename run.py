@@ -1,6 +1,6 @@
 
 from Utils import tools, helpers
-import subprocess, threading, argparse
+import subprocess, threading, argparse, os
 
 helpersObj = helpers.IOFuncs.Default()
 
@@ -12,7 +12,7 @@ argparseObj.add_argument("-u", "--uninstall", help="Uninstall everything from yo
 #if os.geteuid() != 0:
 #    msg = "[sudo] password for %u:"
 #    ret = subprocess.check_call("sudo -v -p '%s'" % msg, shell=True)
-
+#else: print("You are root!! Please run witgh root privileges!!!!!!!"); exit(1)
 
 def run_web_handler():
     subprocess.run(["python", "Utils/webHandler.py"])
