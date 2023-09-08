@@ -9,6 +9,12 @@ work along with adding bug fixes and cleaning up the code. soon we will have war
 - NO the code is not pretty, i will clean it up later. and NO it does not emit a AP yet, it will be coming in soon updates.
 
 ## Installation
+Please note that this MAY not work with some operating systems. Heres a chart of the known and tested OS's
+if you would like to, you can dm me if you have tried it on a os and got it working.
+
+[x] - Kali - NO
+[x] - Raspian OS - YES
+[X] - Ubuntu - Unknown
 
 ### Clone the repo using git.
 
@@ -32,6 +38,7 @@ Run the server (please note future installs will be easier)
 python run.py
 ```
 
+![IMG_0159](https://github.com/im-kuro/piWardriving/assets/86091489/85e43011-b679-4a57-a472-50c3fa0ffa41)
 
 
 ## Todo
