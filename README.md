@@ -12,9 +12,9 @@ work along with adding bug fixes and cleaning up the code. soon we will have war
 Please note that this MAY not work with some operating systems. Heres a chart of the known and tested OS's
 if you would like to, you can dm me if you have tried it on a os and got it working.
 
-[x] - Kali - NO
-[x] - Raspian OS - YES
-[X] - Ubuntu - Unknown
+- [x] Kali - NO
+- [x] Raspian OS - YES
+- [x] Ubuntu - Unknown
 
 ### Clone the repo using git.
 
