@@ -17,10 +17,11 @@ document.addEventListener("DOMContentLoaded", function () {
             // Create JSON payload
             const payload = {
                 interfaceIdx: selectedInterfaceIdx,
-                interfaceName: selectedInterfaceName
+                interfaceName: selectedInterfaceName,
+                event: "setinterface"
             };
             // Make API call using fetch
-            fetch('/setInterface', {
+            fetch('/eventhandler', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -29,8 +30,6 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .then(response => response.json())
             .then(data => {
-                // Handle API response if needed
-                console.log(data);
                 // Close the modal after submitting
                 interfaceModal.hide();
                 selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceName}`;
@@ -45,6 +44,9 @@ document.addEventListener("DOMContentLoaded", function () {
         selectedInterfaceLabel.textContent = `Using Interface: ${selectedInterfaceLabel.textContent}`;
     }
 });
+
+
+
 
 document.addEventListener('DOMContentLoaded', function () {
     // Handle form submission
@@ -76,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 if (!isWarDrivingStarted) {
                     startAttackBtn.textContent = 'Starting...';
-                    const response = await fetch('/startwardriving', {
+                    const response = await fetch('/eventhandler', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -84,7 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         body: JSON.stringify({
                             interface: selectedInterfaceIdx,
                             interfaceName: selectedInterfaceName,
-                            action: selectedAction
+                            action: selectedAction,
+                            event: "startwardriving"
                         })
                     });
                     const responseMessage = await response.json();
@@ -130,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     startAttackBtn.textContent = 'Stopping...';
                     // Perform AJAX request to stop war driving
                     // Modify the fetch request accordingly
-                    const response = await fetch('/startwardriving', {
+                    const response = await fetch('/eventhandler', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -138,7 +141,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         body: JSON.stringify({
                             interface: selectedInterfaceIdx,
                             interfaceName: selectedInterfaceName,
-                            action: "terminate"
+                            action: "terminate",
+                            event: "startwardriving"
                         })
                     });
                     
@@ -172,11 +176,14 @@ const filterOptionsDiv = document.getElementById('filterOptionsDiv');
 async function updateDarkModeStyles() {
     try {
         // Make API call to check if dark mode is enabled
-        const response = await fetch('/getsettings', {
-            method: 'GET',
+        const response = await fetch('/eventhandler', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            body: JSON.stringify({
+                event: "getsettings"
+            })
         });
         const data = await response.json();
        
@@ -211,18 +218,17 @@ darkModeToggle.addEventListener('click', async () => {
         const isDarkMode = body.classList.contains('bg-secondary');
 
         // Prepare payload for API call
-        const darkModePayload = {
-            call: 'darkmode',
-            payload: !isDarkMode
-        };
+
 
         // Make API call to set dark mode status
-        const setSettingsResponse = await fetch('/setsettings', {
+        const setSettingsResponse = await fetch('/eventhandler', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(darkModePayload)
+            event: "setsettings",
+            call: 'darkmode',
+            payload: !isDarkMode
         });
         const setData = await setSettingsResponse.json();
      
@@ -265,7 +271,7 @@ async function updateSignalStrength() {
         };
 
         // Make API call to set option status
-        const setSettingsResponse = await fetch('/setsettings', {
+        const setSettingsResponse = await fetch('/eventhandler', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -296,7 +302,7 @@ async function updateSignalStrength() {
             };
 
             // Make API call to set option status
-            const setSettingsResponse = await fetch('/setsettings', {
+            const setSettingsResponse = await fetch('/eventhandler', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

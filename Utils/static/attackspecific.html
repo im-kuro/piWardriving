@@ -44,7 +44,7 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item active">
-                            <a class="nav-link" href="/" style="font-weight: 1000;">Home</a>
+                            <a class="nav-link" href="/">Home</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/attack">Attack</a>
@@ -52,7 +52,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="/analytics">Analytics</a>
                         </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link" href="/attackspecific" style="font-weight: 1000;">Targeted Attack</a>
+                        </li>
                     </ul>
                 </div>
                         <!-- Dark mode toggle button -->
@@ -63,23 +65,71 @@
             </div>
         </nav>
     </div>
-	<div class="row">
+    <div class="row" id="mainDiv">
+        <div class="col-sm-6 col-lg-5" class="main">
+            <!-- Attack setup panel -->
+            <div class="lg-4 p-4 " id="attackSetupDiv">
+                <div class="header">
+                    <h1>Attack Setup</h1>
+                </div>
+                <div class="">
+                    <form id="attackSetupForm">
+                    <div class="mb-4">
+                        <label for="interfaceSelect" class="form-label" style="font-size: 30px;">Select Interface</label>
+                        {% for interface_name, interface_data in deviceInfo.interfaces.items() %}
+                            <div class="form-check" style="font-size: 20px;">
+                                <input class="form-check-input" type="radio" name="selectedInterface" id="interface_{{ interface_data.idx }}" value="{{ interface_data.idx }}">
+                                <label class="form-check-label" for="interface_{{ interface_data.idx }}">{{ interface_data.interfaceName }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                        <div class="mb-4">
+                            <label class="form-check-label" style="font-size: 30px;">Attack Action:</label>
+							<div class="form-check">
+                                <input class="form-check-input" type="radio" name="attackAction" id="monitorOnly" value="monitorOnly">
+                                <label class="form-check-label" for="monitorOnly" style="font-size: 20px;">Monitor Only</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="attackAction" id="logNetworks" value="logNetworks">
+                                <label class="form-check-label" for="logNetworks" style="font-size: 20px;">Log Networks</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="attackAction" id="captureHandshakes" value="captureHandshakes">
+                                <label class="form-check-label" for="captureHandshakes" style="font-size: 20px;">Capture Handshakes</label>
+                            </div>
+                        
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="startAttackBtn">Start War Driving</button>
+                        <div id="alertContainer"></div>
+                    </form>
+                </div>
+                
+            </div>
+            
+        </div>
+        
+            <!-- Right column - Network Info -->
+            <div class="col-sm-6 col-lg-6 p-4">
+                <div class="row">
 
+                    <div class="">
+                        <h1>Target Info</h1>
+                        <h4>SSID:</h4>
+                        <h4>BSSID:</h4>
+                        <h4>Strength:</h4>
+                        <h4>Encryption Type:</h4>
+                        <h4>Handshake Captured:</h4>
+                    </div>
 
+                </div>
+            </div>           
 
+    </div>
 
-
-
-	</div>
-
-	<div class="row">
-
-
-
-
-
-	</div>
-
-
+    <!-- Add Bootstrap JS and Popper.js -->
+    <script src="Utils/static/bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Add Chart.js -->
+    <script  src="Utils/static/charts.js"></script>
+    <script src="Utils/static/attackspecific.js"></script>
 </body>
 </html>

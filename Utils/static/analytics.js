@@ -1,3 +1,5 @@
+
+
 // Dark mode toggle logic
 const darkModeToggle = document.getElementById('darkModeToggle');
 const body = document.body;
@@ -7,15 +9,17 @@ var darkmodeValue = false;
 // Function to update dark mode styles based on API response
 async function updateDarkModeStyles() {
     try {
+
         // Make API call to check if dark mode is enabled
-        const response = await fetch('/getsettings', {
-            method: 'GET',
+        const response = await fetch('/eventhandler', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            body: JSON.stringify({event: "getsettings"})
         });
         const data = await response.json();
-        console.log('Dark mode API response:', data);
+        
 
         // Update body style and class based on dark mode status
         if (data.settings.darkmode) {
@@ -39,21 +43,21 @@ async function updateDarkModeStyles() {
 // Call the function to update styles on initial load
 updateDarkModeStyles();
 
-
 darkModeToggle.addEventListener('click', async () => {
     try {
         console.log('Dark mode toggle clicked');
         // Get current dark mode status
-        const isDarkMode = body.classList.contains('dark-mode');
+        const isDarkMode = body.classList.contains('bg-secondary');
 
         // Prepare payload for API call
         const darkModePayload = {
             call: 'darkmode',
-            payload: !isDarkMode
+            payload: !isDarkMode,
+            event: "setsettings"
         };
 
         // Make API call to set dark mode status
-        const setSettingsResponse = await fetch('/setsettings', {
+        const setSettingsResponse = await fetch('/eventhandler', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -61,14 +65,14 @@ darkModeToggle.addEventListener('click', async () => {
             body: JSON.stringify(darkModePayload)
         });
         const setData = await setSettingsResponse.json();
-        console.log('Dark mode set response:', setData);
-
+        
         // Update styles after toggling
         updateDarkModeStyles();
     } catch (error) {
         console.error('Error toggling dark mode:', error);
     }
 });
+
 
 
 
@@ -272,16 +276,26 @@ const uploadanddownload = new Chart(uploadDownloadChart, {
 
 // Function to fetch and update the encryption data for the pie chart
 async function updateCharts() {
-
-    const networksResponse = await fetch('/networks');
-    const networksdata = await networksResponse.json();
-
-
+    // Make API call to set option status
+    const setSettingsResponse = await fetch('/eventhandler', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({"event": "ping"})
+    });
+    const response = await setSettingsResponse.json();
+    if (response.message == "noInterfaceSelected") {
+        // If no interface is chosen, show the modal
+        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+        interfaceModal.show();
+    }
+    
     const networkInfoList = document.getElementById('networkInfoList');
     networkInfoList.innerHTML = ''; // Clear the list before populating
 
-    for (const networkName in networksdata.savedNetworks) {
-        const network = networksdata.savedNetworks[networkName];
+    for (const networkName in response.savedNetworks) {
+        const network = response.savedNetworks[networkName];
 
         const listItem = document.createElement('li');
         listItem.classList.add('network-info-item'); // Add a custom class for styling
@@ -290,7 +304,7 @@ async function updateCharts() {
         header.classList.add('network-info-header'); // Add a custom class for styling
         header.classList.add('ssid');
         if (showSSIDs) {
-            header.textContent = `SSID: ${network.ssid}  |  BSSID: ${network.bssid}`;
+            header.textContent = `SSID: ${network.SSID}  |  BSSID: ${network.BSSID}`;
         }else{
             header.textContent = 'SSID: Hidden SSID  |  BSSID: XX:XX:XX:XX:XX:XX:XX';
         }
@@ -299,15 +313,15 @@ async function updateCharts() {
 
         const details = document.createElement('p');
         details.classList.add('network-info-details'); // Add a custom class for styling
-        details.textContent = `Encryption: ${network.encryption.join(', ')}, Signal Strength: ${network.signalStrength}`;
+        details.textContent = `Encryption: ${network.akm.join(', ')}, Signal Strength: ${network.Signal_Strength}`;
 
         const attackButton = document.createElement('button');
         attackButton.textContent = 'Attack'; // Set button text
         attackButton.classList.add('attack-button'); // Add a class for styling
         attackButton.addEventListener('click', () => {
             // Base64 encode SSID and BSSID
-            const encodedSSID = btoa(network.ssid);
-            const encodedBSSID = btoa(network.bssid);
+            const encodedSSID = btoa(network.SSID);
+            const encodedBSSID = btoa(network.BSSID);
             
             // Redirect to /attackNetwork with base64 encoded parameters
             window.location.href = `/attackspecific?ssid=${encodedSSID}&bssid=${encodedBSSID}`;
@@ -322,28 +336,28 @@ async function updateCharts() {
     }
 
     // Update the content of HTML elements with the received data
-    document.getElementById('networkCount').innerText = `In Range: ${networksdata.networkCount}`;
-    document.getElementById('totalNetworks').innerText = `Total Networks: ${networksdata.savedNetworksCount}`;
-    document.getElementById('unknownNetworks').innerText = `Unknown: ${networksdata.unknownEnc}`;
-    document.getElementById('wepNetworks').innerText = `WEP: ${networksdata.WEP}`;
-    document.getElementById('wpaNetworks').innerText = `WPA: ${networksdata.WPA}`;
-    document.getElementById('wpa2Networks').innerText = `WPA2: ${networksdata.WPA2}`;
-    document.getElementById('unknownNetworksSaved').innerText = `Unknown: ${networksdata.unknownSaved}`;
-    document.getElementById('wepNetworksSaved').innerText = `WEP: ${networksdata.savedWEP}`;
-    document.getElementById('wpaNetworksSaved').innerText = `WPA: ${networksdata.savedWPA}`;
-    document.getElementById('wpa2NetworksSaved').innerText = `WPA2: ${networksdata.savedWPA2}`;
+    document.getElementById('networkCount').innerText = `In Range: ${response.networkCount}`;
+    document.getElementById('totalNetworks').innerText = `Total Networks: ${response.savedNetworksCount}`;
+    document.getElementById('unknownNetworks').innerText = `Unknown: ${response.unknownEnc}`;
+    document.getElementById('wepNetworks').innerText = `WEP: ${response.WEP}`;
+    document.getElementById('wpaNetworks').innerText = `WPA: ${response.WPA}`;
+    document.getElementById('wpa2Networks').innerText = `WPA2: ${response.WPA2}`;
+    document.getElementById('unknownNetworksSaved').innerText = `Unknown: ${response.unknownSaved}`;
+    document.getElementById('wepNetworksSaved').innerText = `WEP: ${response.savedWEP}`;
+    document.getElementById('wpaNetworksSaved').innerText = `WPA: ${response.savedWPA}`;
+    document.getElementById('wpa2NetworksSaved').innerText = `WPA2: ${response.savedWPA2}`;
 
     // Update the pie chart data
-    const wpaCount = networksdata.WPA || 0;
-    const wpa2Count = networksdata.WPA2 || 0;
-    const wepCount = networksdata.WEP || 0;
-    const unknownCount = networksdata.unknownEnc || 0;
+    const wpaCount = response.WPA || 0;
+    const wpa2Count = response.WPA2 || 0;
+    const wepCount = response.WEP || 0;
+    const unknownCount = response.unknownEnc || 0;
 
     // Update the pie chart data
-    const wpaCountSaved = networksdata.savedWPA || 0;
-    const wpa2CountSaved = networksdata.savedWPA2 || 0;
-    const wepCountSaved = networksdata.savedWEP || 0;
-    const unknownCountSaved = networksdata.unknownEnc || 0;
+    const wpaCountSaved = response.savedWPA || 0;
+    const wpa2CountSaved = response.savedWPA2 || 0;
+    const wepCountSaved = response.savedWEP || 0;
+    const unknownCountSaved = response.unknownEnc || 0;
 
 
     // Update pie chart data
@@ -367,7 +381,7 @@ async function updateCharts() {
     encryptionPieChartTotal.update();
 
     // Update the strongest signals bar chart data
-    const nearestNetworks = Object.values(networksdata.networks) || [];
+    const nearestNetworks = Object.values(response.networks) || [];
     const sortedNetworks = nearestNetworks.sort((a, b) => b.signalStrength - a.signalStrength);
     const limitedNetworks = sortedNetworks.slice(0, 10); // Limit to max 10 data points
 
@@ -380,11 +394,11 @@ async function updateCharts() {
     strongestSignalsBarChart.data.datasets[0].data = signalData;
     strongestSignalsBarChart.update();
 
-    document.getElementById('upload').innerText = `Upload: ${networksdata.interfaceUsage.upload}`;
-    document.getElementById('download').innerText = `Download: ${networksdata.interfaceUsage.download}`;
+    document.getElementById('upload').innerText = `Upload: ${response.interfaceUsage.upload}`;
+    document.getElementById('download').innerText = `Download: ${response.interfaceUsage.download}`;
     // Update upload and download chart data
-    const uploadData = parseFloat(networksdata.interfaceUsage.upload);
-    const downloadData = parseFloat(networksdata.interfaceUsage.download);
+    const uploadData = parseFloat(response.interfaceUsage.upload);
+    const downloadData = parseFloat(response.interfaceUsage.download);
 
     uploadanddownload.data.labels.push(new Date().toLocaleTimeString()); // Update labels with timestamp
     uploadanddownload.data.datasets[0].data.push(uploadData);
@@ -399,29 +413,7 @@ async function updateCharts() {
     }
 
     uploadanddownload.update();
-
-    const dataresponse = await fetch('/data');
-    const datadata = await dataresponse.json();
     
-    document.getElementById('temp').innerHTML = "CPU Temp: " + datadata.temperature;
-    document.getElementById('cpu').innerHTML = "CPU Usage: " + datadata.cpuUsage;
-    // Update temperature chart
-    temperatureChartInstance.data.labels.push(new Date().toLocaleTimeString());
-    temperatureChartInstance.data.datasets[0].data.push(datadata.temperature);
-    temperatureChartInstance.update();
-    // Update CPU usage chart
-    cpuUsageChartInstance.data.labels.push(new Date().toLocaleTimeString());
-    cpuUsageChartInstance.data.datasets[0].data.push(datadata.cpuUsage);
-    cpuUsageChartInstance.update();
-    // Limit the number of data points to the defined maximum
-    if (temperatureChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
-        temperatureChartInstance.data.datasets[0].data.shift();
-        temperatureChartInstance.data.labels.shift(); // Also shift corresponding label
-    }
-    if (cpuUsageChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
-        cpuUsageChartInstance.data.datasets[0].data.shift();
-        cpuUsageChartInstance.data.labels.shift(); // Also shift corresponding label
-    }
 }
 
 // Initial call to update the chart and set interval for updates
@@ -429,7 +421,45 @@ updateCharts();
 setInterval(updateCharts, 6000); // Update every 6 seconds
 
 
+async function updateCPUData() {
+    try {
 
+        // Make API call to check if dark mode is enabled
+        const response = await fetch('/eventhandler', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({event: "cpuData"})
+        });
+        const data = await response.json();
+
+        document.getElementById('temp').innerHTML = "CPU Temp: " + data.temperature;
+        document.getElementById('cpu').innerHTML = "CPU Usage: " + data.cpuUsage;
+        // Update temperature chart
+        temperatureChartInstance.data.labels.push(new Date().toLocaleTimeString());
+        temperatureChartInstance.data.datasets[0].data.push(data.temperature);
+        temperatureChartInstance.update();
+        // Update CPU usage chart
+        cpuUsageChartInstance.data.labels.push(new Date().toLocaleTimeString());
+        cpuUsageChartInstance.data.datasets[0].data.push(data.cpuUsage);
+        cpuUsageChartInstance.update();
+        // Limit the number of data points to the defined maximum
+        if (temperatureChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+            temperatureChartInstance.data.datasets[0].data.shift();
+            temperatureChartInstance.data.labels.shift();
+        }
+        if (cpuUsageChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+            cpuUsageChartInstance.data.datasets[0].data.shift();
+            cpuUsageChartInstance.data.labels.shift();
+        }
+    } catch (error) {
+        console.error('Error updating charts:', error);
+    }
+}
+
+updateCPUData();
+setInterval(updateCPUData, 5000);
 
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -447,18 +477,18 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault(); // Prevent default form submission
             const selectedInterfaceIdx = interfaceSelect.value;
             const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
-            // Create JSON payload
-            const payload = {
-                interfaceIdx: selectedInterfaceIdx,
-                interfaceName: selectedInterfaceName
-            };
+
             // Make API call using fetch
-            fetch('/setInterface', {
+            fetch('/eventhandler', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                interfaceIdx: selectedInterfaceIdx,
+                interfaceName: selectedInterfaceName,
+                event: "setinterface"
+            })
             })
             .then(response => response.json())
             .then(data => {

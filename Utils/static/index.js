@@ -1,10 +1,6 @@
-
-
 const MAX_DATA_POINTS = 20;
 const temperatureChart = document.getElementById('temperatureChart').getContext('2d');
 const cpuUsageChart = document.getElementById('cpuUsageChart').getContext('2d');
-
-
 
 const temperatureChartInstance = new Chart(temperatureChart, {
     type: 'line',
@@ -19,7 +15,7 @@ const temperatureChartInstance = new Chart(temperatureChart, {
     },
     options: {
         animation: {
-            duration: 1 // Set animation duration to 0 to disable animation
+            duration: 0 // Disable animation for smoother updates
         },
         plugins: {
             legend: {
@@ -30,6 +26,7 @@ const temperatureChartInstance = new Chart(temperatureChart, {
         }
     }
 });
+
 const cpuUsageChartInstance = new Chart(cpuUsageChart, {
     type: 'line',
     data: {
@@ -43,7 +40,7 @@ const cpuUsageChartInstance = new Chart(cpuUsageChart, {
     },
     options: {
         animation: {
-            duration: 1 // Set animation duration to 0 to disable animation
+            duration: 0 // Disable animation for smoother updates
         },
         plugins: {
             legend: {
@@ -53,42 +50,47 @@ const cpuUsageChartInstance = new Chart(cpuUsageChart, {
             }
         }
     }
-
 });
 
-
-
-
 async function updateCharts() {
-    console.log("Updating charts...");
-    const response = await fetch('/data');
-    const data = await response.json();
+    try {
 
-    
-    document.getElementById('temp').innerHTML = "CPU Temp: " + data.temperature;
-    document.getElementById('cpu').innerHTML = "CPU Usage: " + data.cpuUsage;
-    // Update temperature chart
-    temperatureChartInstance.data.labels.push(new Date().toLocaleTimeString());
-    temperatureChartInstance.data.datasets[0].data.push(data.temperature);
-    temperatureChartInstance.update();
-    // Update CPU usage chart
-    cpuUsageChartInstance.data.labels.push(new Date().toLocaleTimeString());
-    cpuUsageChartInstance.data.datasets[0].data.push(data.cpuUsage);
-    cpuUsageChartInstance.update();
-    // Limit the number of data points to the defined maximum
-    if (temperatureChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
-        temperatureChartInstance.data.datasets[0].data.shift();
-        temperatureChartInstance.data.labels.shift(); // Also shift corresponding label
-    }
-    if (cpuUsageChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
-        cpuUsageChartInstance.data.datasets[0].data.shift();
-        cpuUsageChartInstance.data.labels.shift(); // Also shift corresponding label
+        // Make API call to check if dark mode is enabled
+        const response = await fetch('/eventhandler', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({event: "cpuData"})
+        });
+        const data = await response.json();
+
+        document.getElementById('temp').innerHTML = "CPU Temp: " + data.temperature + " °C";
+        document.getElementById('cpu').innerHTML = "CPU Usage: " + data.cpuUsage;
+        // Update temperature chart
+        temperatureChartInstance.data.labels.push(new Date().toLocaleTimeString());
+        temperatureChartInstance.data.datasets[0].data.push(data.temperature);
+        temperatureChartInstance.update();
+        // Update CPU usage chart
+        cpuUsageChartInstance.data.labels.push(new Date().toLocaleTimeString());
+        cpuUsageChartInstance.data.datasets[0].data.push(data.cpuUsage);
+        cpuUsageChartInstance.update();
+        // Limit the number of data points to the defined maximum
+        if (temperatureChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+            temperatureChartInstance.data.datasets[0].data.shift();
+            temperatureChartInstance.data.labels.shift();
+        }
+        if (cpuUsageChartInstance.data.datasets[0].data.length > MAX_DATA_POINTS) {
+            cpuUsageChartInstance.data.datasets[0].data.shift();
+            cpuUsageChartInstance.data.labels.shift();
+        }
+    } catch (error) {
+        console.error('Error updating charts:', error);
     }
 }
 
-
 updateCharts();
-setInterval(updateCharts, 1000);
+setInterval(updateCharts, 5000);
 
 
 
@@ -101,12 +103,14 @@ const netInfoDiv = document.getElementById('netInfoDiv');
 // Function to update dark mode styles based on API response
 async function updateDarkModeStyles() {
     try {
+
         // Make API call to check if dark mode is enabled
-        const response = await fetch('/getsettings', {
-            method: 'GET',
+        const response = await fetch('/eventhandler', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            body: JSON.stringify({event: "getsettings"})
         });
         const data = await response.json();
         
@@ -143,11 +147,12 @@ darkModeToggle.addEventListener('click', async () => {
         // Prepare payload for API call
         const darkModePayload = {
             call: 'darkmode',
-            payload: !isDarkMode
+            payload: !isDarkMode,
+            event: "setsettings"
         };
 
         // Make API call to set dark mode status
-        const setSettingsResponse = await fetch('/setsettings', {
+        const setSettingsResponse = await fetch('/eventhandler', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -169,10 +174,21 @@ darkModeToggle.addEventListener('click', async () => {
 
 // Function to fetch and update the encryption data for the pie chart
 async function updateNetworkInfo() {
-    
-    const response = await fetch('/networks');
-    const data = await response.json();
 
+    // Make API call to set dark mode status
+    const response = await fetch('/eventhandler', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({event: "ping"})
+    });
+    const data = await response.json();
+    if (data.message == "noInterfaceSelected") {
+        // If no interface is chosen, show the modal
+        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
+        interfaceModal.show();
+    }
     // Update the content of HTML elements with the received data
     document.getElementById('networkCount').innerText = `In Range: ${data.networkCount}`;
     document.getElementById('totalNetworks').innerText = `Total Networks: ${data.savedNetworksCount}`;
@@ -199,8 +215,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const interfaceForm = document.getElementById('interfaceForm');
     const interfaceSelect = document.getElementById('interfaceSelect');
     const selectedInterfaceLabel = document.getElementById('selectedInterface');
+
     // Check if an interface is already chosen
     const currentInterface = selectedInterfaceLabel.getAttribute('value'); // Use getAttribute to get the value
+
+
     if (currentInterface == "None") {
         // If no interface is chosen, show the modal
         const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
@@ -210,18 +229,18 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault(); // Prevent default form submission
             const selectedInterfaceIdx = interfaceSelect.value;
             const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
-            // Create JSON payload
-            const payload = {
-                interfaceIdx: selectedInterfaceIdx,
-                interfaceName: selectedInterfaceName
-            };
+
             // Make API call using fetch
-            fetch('/setInterface', {
+            fetch('/eventhandler', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                interfaceIdx: selectedInterfaceIdx,
+                interfaceName: selectedInterfaceName,
+                event: "setinterface"
+            })
             })
             .then(response => response.json())
             .then(data => {

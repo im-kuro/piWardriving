@@ -54,7 +54,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="/analytics">Analytics</a>
                         </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link" href="/attackspecific">Targeted Attack</a>
+                        </li>
                     </ul>
                 </div>
                         <!-- Dark mode toggle button -->
@@ -68,8 +70,8 @@
     <div>
         <div class="row bg-secondary" id="netInfoDiv">
             <!-- Device Info Section -->
-            <div id="deviceInfoDiv" class="col-md-6 bg-primary text-white p-4">
-                <h1>Device info</h1>
+            <div id="deviceInfoDiv" class="col-md-4 bg-primary text-white p-4">
+                <h2>Device info</h2>
                 <h4>Hostname: {{ deviceInfo["hostname"] }}</h4>
                 <h4>OS: {{ deviceInfo["os"] }}</h4>
                 <h4>IP: {{ deviceInfo["ip"] }}</h4>
@@ -80,9 +82,9 @@
 
 
             <!-- Network Info Section -->
-            <div class="col-lg-2 col-sm-2 text-white p-4" id="netInfoDiv">
+            <div class="col-lg-3 col-sm-2 text-white p-4" id="netInfoDiv">
 
-                <h1>Network info</h1>
+                <h2>Network info</h2>
                 <h4 id="networkCount">Networks:</p>
                 <h4 id="totalNetworks">Total Found: </h4>
                 <br>
@@ -93,14 +95,14 @@
 
 
             <!-- Right column - Network Info -->
-            <div class="col-sm-12 col-lg-2 text-white p-4">
+            <div class="col-sm-3 col-lg-2 text-white p-4">
                 <h3>In Range</h3>
                 <h4 id="unknownNetworks">Unknown:</h4>
                 <h4 id="wepNetworks">WEP:</h4>
                 <h4 id="wpaNetworks">WPA:</h4>
                 <h4 id="wpa2Networks">WPA2:</h4>
             </div>
-            <div class="col-sm-12 col-lg-2 text-white p-4">
+            <div class="col-sm-3 col-lg-2 text-white p-4">
                 <h3>Total Count</h3>
                 <h4 id="unknownNetworksSaved">Unknown:</h4>
                 <h4 id="wepNetworksSaved">Total WEP:</h4>
@@ -108,7 +110,7 @@
                 <h4 id="wpa2NetworksSaved">Total WPA2:</h4>
             </div>
 
-
+            
             
 
 

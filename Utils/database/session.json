@@ -3,10 +3,6 @@
     "deauthedAPs": {},
     "capturedHandshakes": {},
     "settings": {
-        "interfaceInfo": {
-            "idx": null,
-            "name": null
-        },
         "darkmode": false,
         "onlShowWEP": false,
         "onlyShowWPA": false,
@@ -18,10 +14,9 @@
         "filterBySignal": false
     },
     "interfaceInfo": {
-        "interfaceInfo": {
-            "idx": "0",
-            "name": "Realtek 8812BU Wireless LAN 802.11ac USB NIC"
-        }
+        "idx": null,
+        "name": null,
+        "mode": null
     },
     "errors": {}
 }
