@@ -79,17 +79,18 @@ async def analytics(request):
 
 @app.route("/attackspecific", methods=["GET"])
 async def attackSpecific(request):
-    try:
-        ssid = base64.b64decode(request.args.get('ssid')).decode('utf-8')
-        bssid = base64.b64decode(request.args.get('bssid')).decode('utf-8')
-    except Exception as e:
-        ssid = "Invalid Base64 encoding"
-        bssid = "Invalid Base64 encoding"
 
+    ssid = base64.b64decode(request.args.get('ssid')).decode('utf-8')
+    bssid = base64.b64decode(request.args.get('bssid')).decode('utf-8')
+
+    tarInfo = await helpers.database().readFromDB("savedNetworks")
     template = env.get_template('attackspecific.html')
     rendered_template = template.render(deviceInfo={
         "interfaces": app.ctx.interfaces,
-        "interfaceInfo": {"idx": app.ctx.interface, "name": app.ctx.interfaceName}
+        "interfaceInfo": {"idx": app.ctx.interface, "name": app.ctx.interfaceName},
+        "ssid": ssid,
+        "bssid": bssid,
+        "tarInfo": tarInfo[ssid]
     })
     return html(rendered_template)
 
@@ -133,7 +134,6 @@ async def eventhandler(request):
         #    print(f"tools.configInterface(app.ctx.interfaceName, 'monitor') - Execution time: {execution_time} seconds")
 #
         #    app.ctx.currentInterfaceMode = "monitor"
-        print("INTERFACE ==> " + app.ctx.interface)
         # Use asyncio.gather to concurrently execute dumpAndStore and database reads
 
         await tools.dumpAndStore(app.ctx.interface, helpers),
@@ -142,8 +142,6 @@ async def eventhandler(request):
         active_networks = db["scanResults"]
         saved_networks = db["savedNetworks"]
         
-        print(f"ACTIVE NETWOORKKSKS => {active_networks}")
-        print(f"SAVED NETWOORKKSKS => {saved_networks}")
         
         if active_networks == {}:
             pass

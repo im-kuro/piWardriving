@@ -52,9 +52,7 @@
                         <li class="nav-item">
                             <a class="nav-link" href="/analytics">Analytics</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/attackspecific" style="font-weight: 1000;">Targeted Attack</a>
-                        </li>
+
                     </ul>
                 </div>
                         <!-- Dark mode toggle button -->
@@ -114,11 +112,12 @@
 
                     <div class="">
                         <h1>Target Info</h1>
-                        <h4>SSID:</h4>
-                        <h4>BSSID:</h4>
-                        <h4>Strength:</h4>
-                        <h4>Encryption Type:</h4>
-                        <h4>Handshake Captured:</h4>
+                        <h4>SSID: {{ tarInfo.SSID }}</h4>
+                        <h4>BSSID: {{ tarInfo.BSSID }}</h4>
+                        <h4>Strength:  {{ tarInfo.SSID }}</h4>
+                        <h4>Encryption Type:  {{ tarInfo.Signal_Strength[0] }}</h4>
+                        <h4>Handshake Captured: None</h4>
+                        <h4>Frequency:  {{ tarInfo.freq }}</h4>
                     </div>
 
                 </div>

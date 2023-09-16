@@ -285,24 +285,22 @@ async function updateCharts() {
         body: JSON.stringify({"event": "ping"})
     });
     const response = await setSettingsResponse.json();
-    if (response.message == "noInterfaceSelected") {
-        // If no interface is chosen, show the modal
-        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
-        interfaceModal.show();
-    }
-    
+    if (response.networks == {})
+        {
+            return;
+        }
     const networkInfoList = document.getElementById('networkInfoList');
     networkInfoList.innerHTML = ''; // Clear the list before populating
 
-    for (const networkName in response.savedNetworks) {
-        const network = response.savedNetworks[networkName];
-
+    for (const networkName in response.networks) {
+        const network = response.networks[networkName];
         const listItem = document.createElement('li');
         listItem.classList.add('network-info-item'); // Add a custom class for styling
 
         const header = document.createElement('h4');
         header.classList.add('network-info-header'); // Add a custom class for styling
         header.classList.add('ssid');
+        console.log(showSSIDs)
         if (showSSIDs) {
             header.textContent = `SSID: ${network.SSID}  |  BSSID: ${network.BSSID}`;
         }else{
@@ -317,7 +315,7 @@ async function updateCharts() {
 
         const attackButton = document.createElement('button');
         attackButton.textContent = 'Attack'; // Set button text
-        attackButton.classList.add('attack-button'); // Add a class for styling
+        attackButton.classList.add('btn'); // Add a class for styling
         attackButton.addEventListener('click', () => {
             // Base64 encode SSID and BSSID
             const encodedSSID = btoa(network.SSID);
@@ -382,11 +380,11 @@ async function updateCharts() {
 
     // Update the strongest signals bar chart data
     const nearestNetworks = Object.values(response.networks) || [];
-    const sortedNetworks = nearestNetworks.sort((a, b) => b.signalStrength - a.signalStrength);
+    const sortedNetworks = nearestNetworks.sort((a, b) => b.Signal_Strength - a.Signal_Strength);
     const limitedNetworks = sortedNetworks.slice(0, 10); // Limit to max 10 data points
 
-    const signalData = limitedNetworks.map(network => (showSSIDs ? network.signalStrength : 0));
-    const ssidData = limitedNetworks.map(network => (showSSIDs ? network.ssid : '')); // Update this line
+    const signalData = limitedNetworks.map(network => (showSSIDs ? network.Signal_Strength : 0));
+    const ssidData = limitedNetworks.map(network => (showSSIDs ? network.SSID : '')); // Update this line
 
 
     // Update chart data
@@ -418,7 +416,7 @@ async function updateCharts() {
 
 // Initial call to update the chart and set interval for updates
 updateCharts();
-setInterval(updateCharts, 6000); // Update every 6 seconds
+setInterval(updateCharts, 4000); // Update every 6 seconds
 
 
 async function updateCPUData() {
@@ -434,7 +432,7 @@ async function updateCPUData() {
         });
         const data = await response.json();
 
-        document.getElementById('temp').innerHTML = "CPU Temp: " + data.temperature;
+        document.getElementById('temp').innerHTML = "CPU Temp: " + data.temperature + " °C";
         document.getElementById('cpu').innerHTML = "CPU Usage: " + data.cpuUsage;
         // Update temperature chart
         temperatureChartInstance.data.labels.push(new Date().toLocaleTimeString());

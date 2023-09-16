@@ -184,11 +184,7 @@ async function updateNetworkInfo() {
         body: JSON.stringify({event: "ping"})
     });
     const data = await response.json();
-    if (data.message == "noInterfaceSelected") {
-        // If no interface is chosen, show the modal
-        const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
-        interfaceModal.show();
-    }
+
     // Update the content of HTML elements with the received data
     document.getElementById('networkCount').innerText = `In Range: ${data.networkCount}`;
     document.getElementById('totalNetworks').innerText = `Total Networks: ${data.savedNetworksCount}`;
@@ -205,7 +201,7 @@ async function updateNetworkInfo() {
 
 // Initial call to update the chart and set interval for updates
 updateNetworkInfo();
-setInterval(updateNetworkInfo, 6000); // Update every 6 seconds
+setInterval(updateNetworkInfo, 4000); // Update every 6 seconds
 
 
 

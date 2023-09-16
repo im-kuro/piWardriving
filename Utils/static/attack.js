@@ -317,3 +317,100 @@ async function updateSignalStrength() {
     });
 
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Function to fetch and update the encryption data for the pie chart
+async function updateNetworkLists() {
+    // Make API call to set option status
+    const setSettingsResponse = await fetch('/eventhandler', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({"event": "ping"})
+    });
+    const response = await setSettingsResponse.json();
+    if (response.networks == {})
+        {
+            return;
+        }
+    const networkInfoList = document.getElementById('networkInfoList');
+    networkInfoList.innerHTML = ''; // Clear the list before populating
+
+    for (const networkName in response.networks) {
+        const network = response.networks[networkName];
+        const listItem = document.createElement('li');
+        listItem.classList.add('network-info-item'); // Add a custom class for styling
+
+        const header = document.createElement('h4');
+        header.classList.add('network-info-header'); // Add a custom class for styling
+        header.classList.add('ssid');
+        
+        if (showSSIDs) {
+            header.textContent = `SSID: ${network.SSID}  |  BSSID: ${network.BSSID}`;
+        }else{
+            header.textContent = 'SSID: Hidden SSID  |  BSSID: XX:XX:XX:XX:XX:XX:XX';
+        }
+        
+
+
+        const details = document.createElement('p');
+        details.classList.add('network-info-details'); // Add a custom class for styling
+        details.textContent = `Encryption: ${network.akm.join(', ')}, Signal Strength: ${network.Signal_Strength}`;
+
+        const attackButton = document.createElement('button');
+        attackButton.textContent = 'Attack'; // Set button text
+        attackButton.classList.add('btn'); // Add a class for styling
+        attackButton.classList.add('btn-danger'); 
+        attackButton.addEventListener('click', () => {
+            // Base64 encode SSID and BSSID
+            const encodedSSID = btoa(network.SSID);
+            const encodedBSSID = btoa(network.BSSID);
+            
+            // Redirect to /attackNetwork with base64 encoded parameters
+            window.location.href = `/attackspecific?ssid=${encodedSSID}&bssid=${encodedBSSID}`;
+        });
+
+
+        listItem.appendChild(header);
+        listItem.appendChild(details);
+        listItem.appendChild(attackButton); // Add the attack button
+
+        networkInfoList.appendChild(listItem);
+    }
+}
+    // Initial call to update the chart and set interval for updates
+updateNetworkLists();
+setInterval(updateNetworkLists, 4000); // Update every 6 seconds
+
+
+
+let showSSIDs = false; // Initial state
+
+
+function toggleSSIDs() {
+    showSSIDs = !showSSIDs; // Toggle the state
+    // Check if the container element exists before trying to access its style
+    const container = document.getElementById('strongestSignalsContainer');
+    if (showSSIDs) {
+        document.getElementById('toggleSSIDsBtn').innerText = 'Hide SSIDs';
+    } else {
+        document.getElementById('toggleSSIDsBtn').innerText = 'Show SSIDs';
+    }
+
+    updateNetworkLists(); // Call the chart update function
+
+}
+
