@@ -7,7 +7,7 @@ any others like it. The project is about 65% working now, currently testing on w
 work along with adding bug fixes and cleaning up the code. soon we will have war driving functionality 
 
 - NO the code is not pretty, i will clean it up later. and NO it does not emit a AP yet, it will be coming in soon updates.
-
+- YES its slow, like really slow but im working on it. its hard to run a web server and deauth networks on a shitty pi
 ## Installation
 Please note that this MAY not work with some operating systems. Heres a chart of the known and tested OS's
 if you would like to, you can dm me if you have tried it on a os and got it working.

@@ -92,9 +92,15 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="attackAction" id="captureHandshakes" value="captureHandshakes">
                                 <label class="form-check-label" for="captureHandshakes">Capture Handshakes</label>
+                                                    <!-- Text input for GPS coordinates -->
+                        <div id="gpsInput" style="display: none;">
+                            <label for="gpsCoordinates" class="form-label">GPS Coordinates:</label>
+                            <input type="text" class="form-control" id="gpsCoordinates" name="gpsCoordinates" placeholder="Enter GPS coordinates">
+                        </div>
                             </div>
                         
                         </div>
+                        
                         <button type="submit" class="btn btn-primary" id="startAttackBtn">Start War Driving</button>
                         <div id="alertContainer"></div>
                     </form>

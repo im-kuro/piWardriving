@@ -285,7 +285,7 @@ async function updateCharts() {
         body: JSON.stringify({"event": "ping"})
     });
     const response = await setSettingsResponse.json();
-    if (response.networks == {})
+    if (Object.keys(response.networks).length === 0)
         {
             return;
         }
@@ -416,7 +416,7 @@ async function updateCharts() {
 
 // Initial call to update the chart and set interval for updates
 updateCharts();
-setInterval(updateCharts, 4000); // Update every 6 seconds
+setInterval(updateCharts, 5000); // Update every 6 seconds
 
 
 async function updateCPUData() {
@@ -457,7 +457,7 @@ async function updateCPUData() {
 }
 
 updateCPUData();
-setInterval(updateCPUData, 5000);
+setInterval(updateCPUData, 3000);
 
 
 document.addEventListener("DOMContentLoaded", function () {

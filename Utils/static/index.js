@@ -64,6 +64,18 @@ async function updateCharts() {
             body: JSON.stringify({event: "cpuData"})
         });
         const data = await response.json();
+        if (data.status == "error")
+            {
+                alert("Error: " + data.error);
+            }
+        if (data.temperature >= 120)
+        {
+            alert("CPU is starting to overheat.");
+        }
+        if (data.cpuLevel == "Critical")
+        {
+            alert("CPU usage is critical. Usage: " + data.cpuUsage + "%");
+        }
 
         document.getElementById('temp').innerHTML = "CPU Temp: " + data.temperature + " °C";
         document.getElementById('cpu').innerHTML = "CPU Usage: " + data.cpuUsage;
@@ -90,7 +102,7 @@ async function updateCharts() {
 }
 
 updateCharts();
-setInterval(updateCharts, 5000);
+setInterval(updateCharts, 3000);
 
 
 
@@ -184,7 +196,10 @@ async function updateNetworkInfo() {
         body: JSON.stringify({event: "ping"})
     });
     const data = await response.json();
-
+    if (Object.keys(data.networks).length === 0)
+        {
+            return;
+        }
     // Update the content of HTML elements with the received data
     document.getElementById('networkCount').innerText = `In Range: ${data.networkCount}`;
     document.getElementById('totalNetworks').innerText = `Total Networks: ${data.savedNetworksCount}`;

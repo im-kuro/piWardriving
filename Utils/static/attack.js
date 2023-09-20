@@ -14,19 +14,18 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault(); // Prevent default form submission
             const selectedInterfaceIdx = interfaceSelect.value;
             const selectedInterfaceName = interfaceSelect.options[interfaceSelect.selectedIndex].text; // Get selected option text
-            // Create JSON payload
-            const payload = {
-                interfaceIdx: selectedInterfaceIdx,
-                interfaceName: selectedInterfaceName,
-                event: "setinterface"
-            };
+
             // Make API call using fetch
             fetch('/eventhandler', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                interfaceIdx: selectedInterfaceIdx,
+                interfaceName: selectedInterfaceName,
+                event: "setinterface"
+            })
             })
             .then(response => response.json())
             .then(data => {
@@ -91,11 +90,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         })
                     });
                     const responseMessage = await response.json();
+                // ERROR HANDLING
                     if (responseMessage.message == "noInterfaceSelected"){
                         // If no interface is chosen, show the modal
                         const interfaceModal = new bootstrap.Modal(document.getElementById('interfaceModal'));
                         interfaceModal.show();
-                    }else if(responseMessage.status == "error"){
+                    } else if(responseMessage.status == "error"){
 
                         const alertContainer = document.getElementById('alertContainer');
 
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         setTimeout(() => {
                             alertDiv.remove();
                         }, 10000);
-                    }
+                    }// ERROR HANDLING
                     if (response.ok) {
                         startAttackBtn.textContent = 'War Driving Started';
                         startAttackBtn.classList.remove('btn-primary');
@@ -342,10 +342,9 @@ async function updateNetworkLists() {
         body: JSON.stringify({"event": "ping"})
     });
     const response = await setSettingsResponse.json();
-    if (response.networks == {})
-        {
-            return;
-        }
+    if (response.message = "noNetworksFound") {
+        return;
+    }
     const networkInfoList = document.getElementById('networkInfoList');
     networkInfoList.innerHTML = ''; // Clear the list before populating
 
@@ -393,7 +392,7 @@ async function updateNetworkLists() {
 }
     // Initial call to update the chart and set interval for updates
 updateNetworkLists();
-setInterval(updateNetworkLists, 4000); // Update every 6 seconds
+setInterval(updateNetworkLists, 8000); // Update every 8 seconds
 
 
 

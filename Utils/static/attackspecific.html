@@ -112,12 +112,13 @@
 
                     <div class="">
                         <h1>Target Info</h1>
-                        <h4>SSID: {{ tarInfo.SSID }}</h4>
-                        <h4>BSSID: {{ tarInfo.BSSID }}</h4>
-                        <h4>Strength:  {{ tarInfo.SSID }}</h4>
-                        <h4>Encryption Type:  {{ tarInfo.Signal_Strength[0] }}</h4>
-                        <h4>Handshake Captured: None</h4>
-                        <h4>Frequency:  {{ tarInfo.freq }}</h4>
+
+                        <h4>SSID: {{ deviceInfo.networkInfo.SSID }}</h4>
+                        <h4>BSSID: {{ deviceInfo.networkInfo.BSSID }}</h4>
+                        <h4>Strength:  {{ deviceInfo.networkInfo.Signal_Strength }}</h4>
+                        <h4>Encryption Type:  {{ deviceInfo.networkInfo.encryption }}</h4>
+                        <h4>Handshake Captured: True/False</h4>
+                        <h4>Frequency:  {{ deviceInfo.networkInfo.freq }}</h4>
                     </div>
 
                 </div>

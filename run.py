@@ -42,6 +42,11 @@ def main():
 			print(f"Error installing packages | Output => {installRes}")
 		else:
 			print("Packages installed successfully")
+
+		configap = helpers.IOFuncs.Default.getUserInput("Would you like to config a AP to auto emit on boot?")
+		runonboot = helpers.IOFuncs.Default.getUserInput("Do you want the tool to run on boot?")
+
+   
 	if argparseObj.parse_args().uninstall:
 		print("Uninstalling tools")
   

@@ -1,6 +1,6 @@
 from sanic import Sanic
 from sanic.response import json, html
-import platform,socket,re,uuid,psutil, asyncio, base64, time, pywifi
+import platform,socket,re,uuid,psutil, asyncio, base64, time, threading,os, subprocess
 from jinja2 import Environment, FileSystemLoader
 # Local imports
 import tools, helpers
@@ -43,7 +43,7 @@ async def index(request):
     rendered_template = template.render(deviceInfo={
         "machineType": platform.machine(),
         "os": platform.system(),
-        "mac": ':'.join(re.findall('..', '%012x' % uuid.getnode())),
+        "mac": ':'.join(re.findall('..', '%012x' % uuid.getnode())).upper(),
         "ram": str(round(psutil.virtual_memory().total / (1024.0 **3)))+" GB",
         "ip": socket.gethostbyname(socket.gethostname()),
         "hostname": socket.gethostname(),
@@ -82,15 +82,15 @@ async def attackSpecific(request):
 
     ssid = base64.b64decode(request.args.get('ssid')).decode('utf-8')
     bssid = base64.b64decode(request.args.get('bssid')).decode('utf-8')
-
+    
     tarInfo = await helpers.database().readFromDB("savedNetworks")
+    if tarInfo == {}:
+        return
     template = env.get_template('attackspecific.html')
     rendered_template = template.render(deviceInfo={
         "interfaces": app.ctx.interfaces,
         "interfaceInfo": {"idx": app.ctx.interface, "name": app.ctx.interfaceName},
-        "ssid": ssid,
-        "bssid": bssid,
-        "tarInfo": tarInfo[ssid]
+        "networkInfo": tarInfo[ssid]
     })
     return html(rendered_template)
 
@@ -113,10 +113,19 @@ async def eventhandler(request):
     except KeyError:
         # Handle the case where "event" key is not present in the JSON request
         return json({"error": "Missing 'event' key in JSON request"})
-        
+        # define variables for use in the for loop
+    unknown = 0; unknownSaved = 0; WPANetworks = 0; WPA2Networks = 0; WEPNetworks = 0; savedWPANetworks = 0; savedWPA2Networks = 0; savedWEPNetworks = 0
+
+    networkCount = 0
+    savedNetworksCount = 0
     # i put this first to hopefully speed up the process since this is the most common call
     if event == "cpuData":
-        return json({"temperature": tools.get_cpu_temperature(), "cpuUsage":  tools.get_cpu_usage()})
+        cpuUsage = tools.get_cpu_usage() #                          We use a array here because i dont give a fuck what you think
+        print(cpuUsage[0])
+        if cpuUsage[0] == "error":
+            return cpuUsage
+        else:
+            return json({"temperature": tools.get_cpu_temperature(), "cpuUsage":  cpuUsage[0], "cpuLevel": cpuUsage[1]})
             
     elif event == "ping":
         if app.ctx.interfaceName is None:
@@ -142,21 +151,14 @@ async def eventhandler(request):
         active_networks = db["scanResults"]
         saved_networks = db["savedNetworks"]
         
-        
-        if active_networks == {}:
-            pass
+        if not active_networks:  # Check if active_networks is empty
+            return json({"status": "error", "message": "noNetworksFound"})
+
         else:
             # Update saved networks if needed
             for network in active_networks.values():
                 if network["SSID"] not in saved_networks:
                     saved_networks[network["SSID"]] = network
-
-            await helpers.database().writeToDB("savedNetworks", saved_networks)
-        # define variables for use in the for loop
-        unknown = 0; unknownSaved = 0; WPANetworks = 0; WPA2Networks = 0; WEPNetworks = 0; savedWPANetworks = 0; savedWPA2Networks = 0; savedWEPNetworks = 0
-
-        networkCount = 0
-        savedNetworksCount = 0
         
         for network_info in active_networks.values():
             networkCount += 1
@@ -169,11 +171,13 @@ async def eventhandler(request):
             
             if network_info["akm"][0] == 4:
                 WPA2Networks += 1
+                network_info["encryption"] = "WPA2"
             elif network_info["akm"][0] == 2 or network_info["akm"][0] == 3:
                 WPANetworks += 1
+                network_info["encryption"] = "WPA"
             elif network_info["akm"][0] == 1:
                 WEPNetworks += 1
-
+                network_info["encryption"] = "WEP"
 
         for network in saved_networks.values():
             if not network["akm"]:  # Check if the encryption list is empty
@@ -187,7 +191,8 @@ async def eventhandler(request):
                 savedWPANetworks += 1
             elif network["akm"][0] == 1:
                 savedWEPNetworks += 1
-
+                
+        await helpers.database().writeToDB("savedNetworks", saved_networks)
 
         return json({
             "savedNetworks": saved_networks,
@@ -271,12 +276,14 @@ async def eventhandler(request):
             loop_running = False
             return json({"status": "Loop terminated"})
 
-        elif action in ["monitorOnly", "logNetworks", "captureHandshakes"]:
+        elif action in ["captureHandshakes"]:
             if not loop_running:
                 # Start the loop by setting the shared variable to True
                 loop_running = True
+                
                 # Create an asyncio task to run the loop function
                 status = await asyncio.create_task(wardrivingLoop(action, interfaceName))
+                
                 if status["status"] == "error":
                     return json({"status": "error", "message": "invalidAction", "response": status})
                 return json({"status": "Loop started"})
@@ -312,6 +319,12 @@ async def eventhandler(request):
 
 # async local func handler so we can use global variables
 async def wardrivingLoop(actionCall: str, interfaceName: str):
+    """ 
+    Lets be real, every function below this is a mess, i dont know what im doing, i just want it to work
+    dont ask my whye i did its rthsi wuay butwe EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE 
+  
+ 
+    """
     global loop_running
     if interfaceName is None:
         interfaceName = app.ctx.interfaceName
@@ -323,24 +336,63 @@ async def wardrivingLoop(actionCall: str, interfaceName: str):
     #    print("Interface is not in monitor mode")
     #    # If not, change it to monitor mode 
     #    await tools.configInterface(interfaceName, "monitor")
-
+    
+    
+    #thread = threading.Thread(target=startHandshakeListening, args=("captureHandshakes", interfaceName))
+    #thread.start()
     
     while loop_running:
-        # Use asyncio.gather to concurrently execute dumpAndStore and database reads
-        dump_result, saved_networks = await asyncio.gather(
-            tools.dumpAndStore(app.ctx.interface, helpers),
-            helpers.database().readFromDB("savedNetworks"),
-        )
-        active_networks = await helpers.database().readFromDB("scanResults")
-        
-        if actionCall == "captureHandshakes":
-            pass
-        
-        await asyncio.sleep(5)  # Adjust the sleep interval as needed
 
+        active_networks = await helpers.database().readFromDB("scanResults")
+         
+        if actionCall == "captureHandshakes":
+           
+    
+            top_5_networks = sorted(active_networks.values(), key=lambda x: x['Signal_Strength'], reverse=True)[:5]
+        
+            for network in top_5_networks:
+                print(f"\nstarting capturing... ==> {network['SSID']}")
+                await tools.captureHandshake(interfaceName, network["BSSID"], timeout=10)
+                print(f"\nfinished with ==> {network['SSID']}")
+                
+                
+        await asyncio.sleep(10)  # Adjust the sleep interval as needed
+        
+    #thread.join()
+    
+    
     # If the loop is stopped, return the interface to its original mode 
     #if current_mode == "monitor":
     #    return await tools.configInterface(interfaceName, current_mode)
+
+    def startHandshakeListening(interface: str, bssid: str, channel: int, timeout: int = 15):
+        try:
+            # Define the airodump-ng command to target a specific network and capture a handshake
+            output_filename = f"Utils/handshakes/{bssid}.cap"  # Define the output filename
+            airodump_command = [
+                "sudo", "airodump-ng", "--output-format", "cap", "--bssid", bssid, "--channel", str(channel), "--write", output_filename, interface
+            ]
+            # Start airodump-ng to capture the handshake
+            airodump_process = asyncio.create_subprocess_exec(*airodump_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            # Keep track of the start time
+            start_time = time.time()
+            while True:
+                # Check if the handshake file exists
+                if os.path.exists(output_filename):
+                    # Handshake captured
+                    airodump_process.terminate()
+                    return {"status": "success", "message": f"Handshake captured and saved as {output_filename}"}
+                # Check if the timeout has been reached
+                elapsed_time = time.time() - start_time
+                if elapsed_time >= timeout:
+                    # Timeout reached, terminate airodump-ng
+                    airodump_process.terminate()
+                    return {"status": "error", "message": "Handshake not captured within the timeout"}
+                # Wait for a short interval before checking again
+        except subprocess.CalledProcessError as e:
+            return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
+        except Exception as e:
+            return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
 
 
 
@@ -353,3 +405,6 @@ if __name__ == "__main__":
     print("Web server stopped")
     # init the session database again to clear it
     helpers.database().__initDatabase__()
+    
+    
+    
