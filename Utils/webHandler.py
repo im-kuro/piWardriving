@@ -1,11 +1,12 @@
 from sanic import Sanic
 from sanic.response import json, html
-import platform,socket,re,uuid,psutil, asyncio, base64, time, threading,os, subprocess
+import platform,socket,re,uuid,psutil, asyncio, base64, time,os, subprocess
 from jinja2 import Environment, FileSystemLoader
 # Local imports
-import tools, helpers
+from Utils import tools, helpers
 
 import json as jsonObj
+
 
 
 app = Sanic("WardrivingTool")
@@ -22,8 +23,10 @@ loop_running = False
 app.ctx.interfaces = tools.showInterfaces()
 app.ctx.interface = None
 app.ctx.interfaceName = None
-app.ctx.currentInterfaceMode = None
 
+def resetDB():
+    return helpers.database().__initDatabase__()
+    
 
 
 """
@@ -131,29 +134,15 @@ async def eventhandler(request):
         if app.ctx.interfaceName is None:
             return json({"status": "error", "message": "noInterfaceSelected"})
 
-        print(f"Current mode: {app.ctx.currentInterfaceMode}")
-
-        #if app.ctx.currentInterfaceMode != "monitor":
-        #    print("Interface is not in monitor mode, setting now.")
-        #    start_time = time.time()
-        #    # If not, change it to monitor mode
-        #    await tools.configInterface(app.ctx.interfaceName, "monitor")
-        #    end_time = time.time()
-        #    execution_time = end_time - start_time
-        #    print(f"tools.configInterface(app.ctx.interfaceName, 'monitor') - Execution time: {execution_time} seconds")
-#
-        #    app.ctx.currentInterfaceMode = "monitor"
-        # Use asyncio.gather to concurrently execute dumpAndStore and database reads
-
-        await tools.dumpAndStore(app.ctx.interface, helpers),
-
+        dumpRes = await tools.dumpAndStore(app.ctx.interface, helpers),
+        print(dumpRes)
         db = await helpers.database().readFromDB()
         active_networks = db["scanResults"]
         saved_networks = db["savedNetworks"]
         
         if not active_networks:  # Check if active_networks is empty
             return json({"status": "error", "message": "noNetworksFound"})
-
+        
         else:
             # Update saved networks if needed
             for network in active_networks.values():
@@ -217,11 +206,11 @@ async def eventhandler(request):
     elif event == "setinterface":
         app.ctx.interface = request.json.get("interfaceIdx")
         app.ctx.interfaceName = request.json.get("interfaceName")
-        #app.ctx.currentInterfaceMode = await tools.getInterfaceMode(app.ctx.interfaceName)
+        
         tools.interface = app.ctx.interface
-        await helpers.database().writeToDB("interfaceInfo", {"interfaceInfo":{"idx": app.ctx.interface, "name": app.ctx.interfaceName, "mode": app.ctx.currentInterfaceMode}})
+        await helpers.database().writeToDB("interfaceInfo", {"interfaceInfo":{"idx": app.ctx.interface, "name": app.ctx.interfaceName}})
 
-        return json({"status": "success", "interface": app.ctx.interface, "interfaceName": app.ctx.interfaceName, "interfaceMode": app.ctx.currentInterfaceMode})
+        return json({"status": "success", "interface": app.ctx.interface, "interfaceName": app.ctx.interfaceName})
         
         
         
@@ -393,18 +382,3 @@ async def wardrivingLoop(actionCall: str, interfaceName: str):
             return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
         except Exception as e:
             return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
-
-
-
-if __name__ == "__main__":
-    helpers.database().__initDatabase__()
-    
-    print("You can now browse to http://127.0.0.1:6969/ to view the web interface (please plug in your wifi adapter if you haven't already)")
-    # Start the web server
-    app.run(host="127.0.0.1", port=6969)
-    print("Web server stopped")
-    # init the session database again to clear it
-    helpers.database().__initDatabase__()
-    
-    
-    

