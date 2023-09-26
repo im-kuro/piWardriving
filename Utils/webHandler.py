@@ -1,6 +1,6 @@
 from sanic import Sanic
 from sanic.response import json, html
-import platform,socket,re,uuid,psutil, asyncio, base64, time,os, subprocess
+import platform,socket,re,uuid,psutil, asyncio, base64, time,os, subprocess, threading
 from jinja2 import Environment, FileSystemLoader
 # Local imports
 from Utils import tools, helpers
@@ -35,8 +35,6 @@ FRONT END CODE HERE
 
 """
 
-
-    
     
 @app.route("/")
 async def index(request):
@@ -117,87 +115,14 @@ async def eventhandler(request):
         # Handle the case where "event" key is not present in the JSON request
         return json({"error": "Missing 'event' key in JSON request"})
         # define variables for use in the for loop
-    unknown = 0; unknownSaved = 0; WPANetworks = 0; WPA2Networks = 0; WEPNetworks = 0; savedWPANetworks = 0; savedWPA2Networks = 0; savedWEPNetworks = 0
 
-    networkCount = 0
-    savedNetworksCount = 0
     # i put this first to hopefully speed up the process since this is the most common call
     if event == "cpuData":
-        cpuUsage = tools.get_cpu_usage() #                          We use a array here because i dont give a fuck what you think
-        print(cpuUsage[0])
+        cpuUsage = tools.get_cpu_usage() # We use a array here because i dont give a fuck what you think
         if cpuUsage[0] == "error":
             return cpuUsage
         else:
             return json({"temperature": tools.get_cpu_temperature(), "cpuUsage":  cpuUsage[0], "cpuLevel": cpuUsage[1]})
-            
-    elif event == "ping":
-        if app.ctx.interfaceName is None:
-            return json({"status": "error", "message": "noInterfaceSelected"})
-
-        dumpRes = await tools.dumpAndStore(app.ctx.interface, helpers),
-        print(dumpRes)
-        db = await helpers.database().readFromDB()
-        active_networks = db["scanResults"]
-        saved_networks = db["savedNetworks"]
-        
-        if not active_networks:  # Check if active_networks is empty
-            return json({"status": "error", "message": "noNetworksFound"})
-        
-        else:
-            # Update saved networks if needed
-            for network in active_networks.values():
-                if network["SSID"] not in saved_networks:
-                    saved_networks[network["SSID"]] = network
-        
-        for network_info in active_networks.values():
-            networkCount += 1
-            encryption = network_info["akm"]
-
-            if not encryption:  # Check if the encryption list is empty
-                unknown =+ 1
-                continue
-
-            
-            if network_info["akm"][0] == 4:
-                WPA2Networks += 1
-                network_info["encryption"] = "WPA2"
-            elif network_info["akm"][0] == 2 or network_info["akm"][0] == 3:
-                WPANetworks += 1
-                network_info["encryption"] = "WPA"
-            elif network_info["akm"][0] == 1:
-                WEPNetworks += 1
-                network_info["encryption"] = "WEP"
-
-        for network in saved_networks.values():
-            if not network["akm"]:  # Check if the encryption list is empty
-                unknownSaved =+ 1
-                continue
-        
-            savedNetworksCount += 1
-            if network["akm"][0] == 4:
-                savedWPA2Networks += 1
-            elif network["akm"][0] == 2 or network["akm"][0] == 3:
-                savedWPANetworks += 1
-            elif network["akm"][0] == 1:
-                savedWEPNetworks += 1
-                
-        await helpers.database().writeToDB("savedNetworks", saved_networks)
-
-        return json({
-            "savedNetworks": saved_networks,
-            "savedNetworksCount": savedNetworksCount,
-            "networks": active_networks,
-            "networkCount": networkCount,
-            "WPA": WPANetworks,
-            "WPA2": WPA2Networks,
-            "WEP": WEPNetworks,
-            "savedWPA": savedWPANetworks,
-            "savedWPA2": savedWPA2Networks,
-            "savedWEP": savedWEPNetworks,
-            "unknownSaved": unknownSaved,
-            "unknownEnc": unknown,
-            "interfaceUsage": tools.getInterfaceUsage(app.ctx.interface)
-        })
 
         
     
@@ -216,7 +141,7 @@ async def eventhandler(request):
         
     # setting a setting to the database
     elif event == "setsettings":
-        settingCall = request.json.get("call")  # Use .get() to safely get the value
+        settingCall = request.json.get("call") 
         settingPayload = request.json.get("payload")
 
         try:
@@ -249,37 +174,50 @@ async def eventhandler(request):
 
   
     elif event == "startwardriving":
-    
-        #if app.ctx.interface is None:
-        #    return json({"status": "error", "message": "noInterfaceSelected"})
-        #if tools.checkMonitorModeSupport(app.ctx.interfaceName) == False:
-        #    return json({"status": "error", "message": "monitorModeNotSupported"})
         
         global loop_running
-        
-        action = request.json["action"]
-        interfaceName = request.json["interfaceName"]
-        
-        if action == "terminate":
-            # Stop the loop by setting the shared variable to False
-            loop_running = False
-            return json({"status": "Loop terminated"})
+        try:
+            data = request.json
+            action = data.get("action")
+            interface_name = data.get("interfaceName")
 
-        elif action in ["captureHandshakes"]:
-            if not loop_running:
+            if not action or not interface_name:
+                return json({"status": "error", "message": "Invalid request"})
+
+            if action == "terminate":
+                if loop_running:
+                    loop_running = False
+                    return json({"status": "Loop terminated"})
+                else:
+                    return json({"status": "error", "message": "Loop is not running"})
+
+            elif action == "captureHandshakes":
+                if loop_running:
+                    return json({"status": "error", "message": "Loop is already running"})
+
+
                 # Start the loop by setting the shared variable to True
                 loop_running = True
-                
+
                 # Create an asyncio task to run the loop function
-                status = await asyncio.create_task(wardrivingLoop(action, interfaceName))
+                #status = await asyncio.create_task(wardrivingLoop(action, interface_name))
+                # Create thread for deauthenticateNetwork
+                status = threading.Thread(target=wardrivingLoop, args=(action, interface_name))
+
+                # Start the threads
+                status.start()
                 
                 if status["status"] == "error":
-                    return json({"status": "error", "message": "invalidAction", "response": status})
+                    return json({"status": "error", "message": "Invalid action", "response": status})
                 return json({"status": "Loop started"})
-            else:
-                return json({"status": "error", "message": "loop is already running"})
 
+        except Exception as e:
+            # Handle exceptions and log errors
+            print(f"Error in request processing: {str(e)}")
+            return json({"status": "error", "message": "Internal error"})
 
+        return json({"status": "error", "message": "Invalid action"})
+        
     elif event == "setMode":
         
         settingPayload = request.json.get("mode")
@@ -304,7 +242,82 @@ async def eventhandler(request):
     elif event == "gpsdata":   
         return await json(tools.getGPSData(GPSinterface=request.json.get("GPSinterface")))
     
+    
+    
+@app.route('/ping', methods=["GET"])
+async def ping(request):
+    if app.ctx.interfaceName is None:
+        return json({"status": "error", "message": "noInterfaceSelected"})
+
+    unknown = 0; unknownSaved = 0; WPANetworks = 0; WPA2Networks = 0; WEPNetworks = 0; savedWPANetworks = 0; savedWPA2Networks = 0; savedWEPNetworks = 0
+
+    networkCount = 0
+    savedNetworksCount = 0
+
+    dumpRes = await tools.dumpAndStore(app.ctx.interface, helpers),
+    
+    db = await helpers.database().readFromDB()
+    active_networks = db["scanResults"]
+    saved_networks = db["savedNetworks"]
+    
+    if not active_networks:  # Check if active_networks is empty
+        return json({"status": "error", "message": "noNetworksFound"})
+    
+    else:
+        # Update saved networks if needed
+        for network in active_networks.values():
+            if network["SSID"] not in saved_networks:
+                saved_networks[network["SSID"]] = network
+    
+    for network_info in active_networks.values():
+        networkCount += 1
+        encryption = network_info["akm"]
+
+        if not encryption:  # Check if the encryption list is empty
+            unknown =+ 1
+            continue
+
+        
+        if network_info["akm"][0] == 4:
+            WPA2Networks += 1
+            network_info["encryption"] = "WPA2"
+        elif network_info["akm"][0] == 2 or network_info["akm"][0] == 3:
+            WPANetworks += 1
+            network_info["encryption"] = "WPA"
+        elif network_info["akm"][0] == 1:
+            WEPNetworks += 1
+            network_info["encryption"] = "WEP"
+
+    for network in saved_networks.values():
+        if not network["akm"]:  # Check if the encryption list is empty
+            unknownSaved =+ 1
+            continue
+    
+        savedNetworksCount += 1
+        if network["akm"][0] == 4:
+            savedWPA2Networks += 1
+        elif network["akm"][0] == 2 or network["akm"][0] == 3:
+            savedWPANetworks += 1
+        elif network["akm"][0] == 1:
+            savedWEPNetworks += 1
             
+    await helpers.database().writeToDB("savedNetworks", saved_networks)
+
+    return json({
+        "savedNetworks": saved_networks,
+        "savedNetworksCount": savedNetworksCount,
+        "networks": active_networks,
+        "networkCount": networkCount,
+        "WPA": WPANetworks,
+        "WPA2": WPA2Networks,
+        "WEP": WEPNetworks,
+        "savedWPA": savedWPANetworks,
+        "savedWPA2": savedWPA2Networks,
+        "savedWEP": savedWEPNetworks,
+        "unknownSaved": unknownSaved,
+        "unknownEnc": unknown,
+        "interfaceUsage": tools.getInterfaceUsage(app.ctx.interface)
+    })
 
 # async local func handler so we can use global variables
 async def wardrivingLoop(actionCall: str, interfaceName: str):
@@ -314,71 +327,40 @@ async def wardrivingLoop(actionCall: str, interfaceName: str):
   
  
     """
+    
     global loop_running
+    
+    
     if interfaceName is None:
         interfaceName = app.ctx.interfaceName
     # Check if the interface is already in monitor mode
-    #current_mode = await tools.getInterfaceMode(interfaceName)
-    #print(f"Current mode: {current_mode}")
+    current_mode = await tools.getInterfaceMode(interfaceName)
+    print(f"Current mode: {current_mode}")
+
+    if current_mode != "monitor":
+        print("Interface is not in monitor mode")
+        # If not, change it to monitor mode 
+        await tools.configInterface(interfaceName, "monitor")
     
-    #if current_mode != "monitor":
-    #    print("Interface is not in monitor mode")
-    #    # If not, change it to monitor mode 
-    #    await tools.configInterface(interfaceName, "monitor")
-    
-    
-    #thread = threading.Thread(target=startHandshakeListening, args=("captureHandshakes", interfaceName))
-    #thread.start()
+
     
     while loop_running:
 
         active_networks = await helpers.database().readFromDB("scanResults")
          
         if actionCall == "captureHandshakes":
-           
-    
+        
             top_5_networks = sorted(active_networks.values(), key=lambda x: x['Signal_Strength'], reverse=True)[:5]
         
             for network in top_5_networks:
                 print(f"\nstarting capturing... ==> {network['SSID']}")
-                await tools.captureHandshake(interfaceName, network["BSSID"], timeout=10)
+                tools.captureHandshake(interfaceName, network["BSSID"], timeout=10)
                 print(f"\nfinished with ==> {network['SSID']}")
-                
+                asyncio.sleep(2)
                 
         await asyncio.sleep(10)  # Adjust the sleep interval as needed
-        
-    #thread.join()
-    
+
     
     # If the loop is stopped, return the interface to its original mode 
     #if current_mode == "monitor":
     #    return await tools.configInterface(interfaceName, current_mode)
-
-    def startHandshakeListening(interface: str, bssid: str, channel: int, timeout: int = 15):
-        try:
-            # Define the airodump-ng command to target a specific network and capture a handshake
-            output_filename = f"Utils/handshakes/{bssid}.cap"  # Define the output filename
-            airodump_command = [
-                "sudo", "airodump-ng", "--output-format", "cap", "--bssid", bssid, "--channel", str(channel), "--write", output_filename, interface
-            ]
-            # Start airodump-ng to capture the handshake
-            airodump_process = asyncio.create_subprocess_exec(*airodump_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            # Keep track of the start time
-            start_time = time.time()
-            while True:
-                # Check if the handshake file exists
-                if os.path.exists(output_filename):
-                    # Handshake captured
-                    airodump_process.terminate()
-                    return {"status": "success", "message": f"Handshake captured and saved as {output_filename}"}
-                # Check if the timeout has been reached
-                elapsed_time = time.time() - start_time
-                if elapsed_time >= timeout:
-                    # Timeout reached, terminate airodump-ng
-                    airodump_process.terminate()
-                    return {"status": "error", "message": "Handshake not captured within the timeout"}
-                # Wait for a short interval before checking again
-        except subprocess.CalledProcessError as e:
-            return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
-        except Exception as e:
-            return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}

@@ -1,5 +1,5 @@
 
-import subprocess, json, re, sys, logging, time, os
+import subprocess, json, re, sys, logging, time, os, threading
 
 import psutil, aioserial, pywifi
 from gpiozero import CPUTemperature
@@ -321,38 +321,48 @@ async def deauthenticateNetwork(interface: str, bssid: str, timeout: int = 10, f
 
 
 # ok yes this part is chatgpt but hey this part was hard gimmie a break🤓
-async def captureHandshake(interface: str, bssid: str, timeout: int = 10):
-    #try:
-    # YES it ends here, these are the last to sub calls to listen and capture the handshake hopefully lmao
-    
-    listening_task = asyncio.create_task(listenForHandshakes(interface, bssid))
-    deauth_task = asyncio.create_task(deauthenticateNetwork(interface, bssid, timeout))
+def captureHandshake(interface: str, bssid: str, timeout: int = 10):
+    # Initialize thread-specific variables to store results and exceptions
+    listening_result = None
+    deauth_result = None
+    listening_exception = None
+    deauth_exception = None
 
-    # Wait for either task to complete
-    done, _ = await asyncio.wait([listening_task, deauth_task], return_when=asyncio.ALL_COMPLETED)
+    # Create thread for listenForHandshakes
+    listening_thread = threading.Thread(target=lambda: capture_result_exception(
+        listenForHandshakes, (interface, bssid), listening_result, listening_exception))
 
-    # Cancel the other task
-    for task in done:
-        print("task done => ", task)
-        if task == listening_task:
-            deauth_task.cancel()
-        else:
-            listening_task.cancel()
+    # Create thread for deauthenticateNetwork
+    deauth_thread = threading.Thread(target=lambda: capture_result_exception(
+        deauthenticateNetwork, (interface, bssid, timeout), deauth_result, deauth_exception))
 
-    # Determine which task completed
-    if listening_task.done() and listening_task.result():
-        return listening_task.result()
-    elif deauth_task.done() and deauth_task.result():
-        return deauth_task.result()
+    # Start the threads
+    listening_thread.start()
+    deauth_thread.start()
 
-    return {"status": "error", "message": "Both tasks failed to complete"}
+    # Wait for both threads to complete
+    listening_thread.join() 
+    deauth_thread.join()
 
-    #except asyncio.CancelledError:
-    #    return {"status": "error", "message": "Task was cancelled"}
-    #except subprocess.CalledProcessError as e:
-    #    return {"status": "error", "message": "Error running airodump-ng", "error": str(e)}
-    #except Exception as e:
-    #    return {"status": "error", "message": "An unexpected error occurred", "error": str(e)}
+    # Determine which thread completed successfully or if both failed
+    if listening_result:
+        return listening_result
+    elif deauth_result:
+        return deauth_result
+    elif listening_exception and deauth_exception:
+        return {"status": "error", "message": "Both tasks failed to complete"}
+    elif listening_exception:
+        return {"status": "error", "message": "Listening task failed", "error": str(listening_exception)}
+    elif deauth_exception:
+        return {"status": "error", "message": "Deauthentication task failed", "error": str(deauth_exception)}
+    else:
+        return {"status": "error", "message": "Unknown error occurred"}
+
+def capture_result_exception(target_func, args, result_var, exception_var):
+    try:
+        result_var = target_func(*args)
+    except Exception as e:
+        exception_var = e
 
 
 

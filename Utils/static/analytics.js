@@ -277,18 +277,15 @@ const uploadanddownload = new Chart(uploadDownloadChart, {
 // Function to fetch and update the encryption data for the pie chart
 async function updateCharts() {
     // Make API call to set option status
-    const setSettingsResponse = await fetch('/eventhandler', {
-        method: 'POST',
+    const setSettingsResponse = await fetch('/ping', {
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({"event": "ping"})
+        
     });
     const response = await setSettingsResponse.json();
-    if (Object.keys(response.networks).length === 0)
-        {
-            return;
-        }
+
     const networkInfoList = document.getElementById('networkInfoList');
     networkInfoList.innerHTML = ''; // Clear the list before populating
 

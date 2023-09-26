@@ -334,12 +334,12 @@ async function updateSignalStrength() {
 // Function to fetch and update the encryption data for the pie chart
 async function updateNetworkLists() {
     // Make API call to set option status
-    const setSettingsResponse = await fetch('/eventhandler', {
-        method: 'POST',
+    const setSettingsResponse = await fetch('/ping', {
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({"event": "ping"})
+       
     });
     const response = await setSettingsResponse.json();
     if (response.message = "noNetworksFound") {

@@ -188,18 +188,15 @@ darkModeToggle.addEventListener('click', async () => {
 async function updateNetworkInfo() {
 
     // Make API call to set dark mode status
-    const response = await fetch('/eventhandler', {
-        method: 'POST',
+    const response = await fetch('/ping', {
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({event: "ping"})
+        
     });
     const data = await response.json();
-    if (Object.keys(data.networks).length === 0)
-        {
-            return;
-        }
+
     // Update the content of HTML elements with the received data
     document.getElementById('networkCount').innerText = `In Range: ${data.networkCount}`;
     document.getElementById('totalNetworks').innerText = `Total Networks: ${data.savedNetworksCount}`;
